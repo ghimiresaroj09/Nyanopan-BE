@@ -6,11 +6,19 @@ through WhiteNoise, and logs to stdout so the platform log stream catches
 everything.
 """
 
+import os
+import sys
 import warnings
 
 from django.core.exceptions import ImproperlyConfigured
 
-from .base import *  # noqa: F401,F403
+try:
+    from .base import *  # noqa: F401,F403
+except Exception as e:
+    sys.stderr.write(f"ERROR loading base settings: {e}\n")
+    sys.stderr.write(f"Python path: {sys.path}\n")
+    sys.stderr.write(f"Current directory: {os.getcwd()}\n")
+    raise
 
 # ---------------------------------------------------------------------------
 # Core guards — fail at import time rather than serving a broken deployment
