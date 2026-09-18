@@ -1,0 +1,718 @@
+{
+  "name": "Chelsea Boot",
+  "model": "chelsea",
+  "gender": "MEN",
+  "description": "Classic elastic-sided Chelsea boot in full-grain leather.",
+  "general_information": "Handcrafted Goodyear-welted boot.",
+  "materials_used": "Full-grain leather upper, rubber sole.",
+  "category": "boots",
+  "is_featured": true,
+  "key_features": [
+    {
+      "title": "Upper Material",
+      "value": "Full-grain leather"
+    },
+    {
+      "title": "Sole",
+      "value": "Rubber"
+    },
+    {
+      "title": "Closure",
+      "value": "Elastic side gore"
+    }
+  ],
+  "attribute_values": [
+    {
+      "key": "black",
+      "attribute": "Color",
+      "attribute_value": "Black",
+      "feature_image": {
+        "file": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAFklEQVR4nGOUk5NjIASYCKoYVTQAigCx8ABylGjpRgAAAABJRU5ErkJggg==",
+        "title": "Black Chelsea Boot",
+        "caption": "Black full-grain leather Chelsea boot",
+        "alt": "Black Chelsea boot"
+      },
+      "additional_images": [
+        {
+          "file": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAFklEQVR4nGOMiopiIASYCKoYVTQAigDoxwEmYpgQnAAAAABJRU5ErkJggg==",
+          "title": "Black side view",
+          "alt": "Black boot from the side"
+        }
+      ]
+    },
+    {
+      "key": "brown",
+      "attribute": "Color",
+      "attribute_value": "Brown",
+      "feature_image": {
+        "file": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAFklEQVR4nGPM99NgIASYCKoYVTQAigCiRAD9ppLdvQAAAABJRU5ErkJggg==",
+        "title": "Brown Chelsea Boot",
+        "caption": "Brown full-grain leather Chelsea boot",
+        "alt": "Brown Chelsea boot"
+      },
+      "additional_images": [
+        {
+          "file": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAF0lEQVR4nGNc0BTFQAgwEVQxqmgAFAEApwgBlPlqke8AAAAASUVORK5CYII=",
+          "title": "Brown side view",
+          "alt": "Brown boot from the side"
+        }
+      ]
+    },
+    {
+      "key": "tan",
+      "attribute": "Color",
+      "attribute_value": "Tan",
+      "feature_image": {
+        "file": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAF0lEQVR4nGO8tKWHgRBgIqhiVNEAKAIAqhMCKghGUoAAAAAASUVORK5CYII=",
+        "title": "Tan Chelsea Boot",
+        "caption": "Tan full-grain leather Chelsea boot",
+        "alt": "Tan Chelsea boot"
+      },
+      "additional_images": [
+        {
+          "file": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAF0lEQVR4nGN8dmk9AyHARFDFqKIBUAQAPNUCf4hK2OEAAAAASUVORK5CYII=",
+          "title": "Tan side view",
+          "alt": "Tan boot from the side"
+        }
+      ]
+    },
+    {
+      "key": "burgundy",
+      "attribute": "Color",
+      "attribute_value": "Burgundy",
+      "feature_image": {
+        "file": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAFklEQVR4nGNsYFBgIASYCKoYVTQAigArOwC4W70wqwAAAABJRU5ErkJggg==",
+        "title": "Burgundy Chelsea Boot",
+        "caption": "Burgundy full-grain leather Chelsea boot",
+        "alt": "Burgundy Chelsea boot"
+      },
+      "additional_images": [
+        {
+          "file": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAF0lEQVR4nGNcZRPAQAgwEVQxqmgAFAEALkABTvVpcfAAAAAASUVORK5CYII=",
+          "title": "Burgundy side view",
+          "alt": "Burgundy boot from the side"
+        }
+      ]
+    },
+    {
+      "key": "grey",
+      "attribute": "Color",
+      "attribute_value": "Grey",
+      "feature_image": {
+        "file": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAFklEQVR4nGNsaGhgIASYCKoYVTQAigCtqgGYhZhQFwAAAABJRU5ErkJggg==",
+        "title": "Grey Chelsea Boot",
+        "caption": "Grey full-grain leather Chelsea boot",
+        "alt": "Grey Chelsea boot"
+      },
+      "additional_images": [
+        {
+          "file": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAF0lEQVR4nGPcsmULAyHARFDFqKIBUAQAuxECNEIvvN8AAAAASUVORK5CYII=",
+          "title": "Grey side view",
+          "alt": "Grey boot from the side"
+        }
+      ]
+    },
+    {
+      "key": "39",
+      "attribute": "Size",
+      "attribute_value": "39"
+    },
+    {
+      "key": "40",
+      "attribute": "Size",
+      "attribute_value": "40"
+    },
+    {
+      "key": "41",
+      "attribute": "Size",
+      "attribute_value": "41"
+    },
+    {
+      "key": "42",
+      "attribute": "Size",
+      "attribute_value": "42"
+    },
+    {
+      "key": "43",
+      "attribute": "Size",
+      "attribute_value": "43"
+    },
+    {
+      "key": "44",
+      "attribute": "Size",
+      "attribute_value": "44"
+    },
+    {
+      "key": "45",
+      "attribute": "Size",
+      "attribute_value": "45"
+    },
+    {
+      "key": "46",
+      "attribute": "Size",
+      "attribute_value": "46"
+    },
+    {
+      "key": "47",
+      "attribute": "Size",
+      "attribute_value": "47"
+    },
+    {
+      "key": "48",
+      "attribute": "Size",
+      "attribute_value": "48"
+    }
+  ],
+  "variants": [
+    {
+      "price": "12995.00",
+      "options": [
+        {
+          "key": "black"
+        },
+        {
+          "key": "39"
+        }
+      ]
+    },
+    {
+      "price": "12995.00",
+      "options": [
+        {
+          "key": "black"
+        },
+        {
+          "key": "40"
+        }
+      ]
+    },
+    {
+      "price": "12995.00",
+      "options": [
+        {
+          "key": "black"
+        },
+        {
+          "key": "41"
+        }
+      ]
+    },
+    {
+      "price": "12995.00",
+      "options": [
+        {
+          "key": "black"
+        },
+        {
+          "key": "42"
+        }
+      ]
+    },
+    {
+      "price": "12995.00",
+      "options": [
+        {
+          "key": "black"
+        },
+        {
+          "key": "43"
+        }
+      ]
+    },
+    {
+      "price": "12995.00",
+      "options": [
+        {
+          "key": "black"
+        },
+        {
+          "key": "44"
+        }
+      ]
+    },
+    {
+      "price": "12995.00",
+      "options": [
+        {
+          "key": "black"
+        },
+        {
+          "key": "45"
+        }
+      ]
+    },
+    {
+      "price": "12995.00",
+      "options": [
+        {
+          "key": "black"
+        },
+        {
+          "key": "46"
+        }
+      ]
+    },
+    {
+      "price": "12995.00",
+      "options": [
+        {
+          "key": "black"
+        },
+        {
+          "key": "47"
+        }
+      ]
+    },
+    {
+      "price": "12995.00",
+      "options": [
+        {
+          "key": "black"
+        },
+        {
+          "key": "48"
+        }
+      ]
+    },
+    {
+      "price": "13495.00",
+      "options": [
+        {
+          "key": "brown"
+        },
+        {
+          "key": "39"
+        }
+      ]
+    },
+    {
+      "price": "13495.00",
+      "options": [
+        {
+          "key": "brown"
+        },
+        {
+          "key": "40"
+        }
+      ]
+    },
+    {
+      "price": "13495.00",
+      "options": [
+        {
+          "key": "brown"
+        },
+        {
+          "key": "41"
+        }
+      ]
+    },
+    {
+      "price": "13495.00",
+      "options": [
+        {
+          "key": "brown"
+        },
+        {
+          "key": "42"
+        }
+      ]
+    },
+    {
+      "price": "13495.00",
+      "options": [
+        {
+          "key": "brown"
+        },
+        {
+          "key": "43"
+        }
+      ]
+    },
+    {
+      "price": "13495.00",
+      "options": [
+        {
+          "key": "brown"
+        },
+        {
+          "key": "44"
+        }
+      ]
+    },
+    {
+      "price": "13495.00",
+      "options": [
+        {
+          "key": "brown"
+        },
+        {
+          "key": "45"
+        }
+      ]
+    },
+    {
+      "price": "13495.00",
+      "options": [
+        {
+          "key": "brown"
+        },
+        {
+          "key": "46"
+        }
+      ]
+    },
+    {
+      "price": "13495.00",
+      "options": [
+        {
+          "key": "brown"
+        },
+        {
+          "key": "47"
+        }
+      ]
+    },
+    {
+      "price": "13495.00",
+      "options": [
+        {
+          "key": "brown"
+        },
+        {
+          "key": "48"
+        }
+      ]
+    },
+    {
+      "price": "11995.00",
+      "options": [
+        {
+          "key": "tan"
+        },
+        {
+          "key": "39"
+        }
+      ]
+    },
+    {
+      "price": "11995.00",
+      "options": [
+        {
+          "key": "tan"
+        },
+        {
+          "key": "40"
+        }
+      ]
+    },
+    {
+      "price": "11995.00",
+      "options": [
+        {
+          "key": "tan"
+        },
+        {
+          "key": "41"
+        }
+      ]
+    },
+    {
+      "price": "11995.00",
+      "options": [
+        {
+          "key": "tan"
+        },
+        {
+          "key": "42"
+        }
+      ]
+    },
+    {
+      "price": "11995.00",
+      "options": [
+        {
+          "key": "tan"
+        },
+        {
+          "key": "43"
+        }
+      ]
+    },
+    {
+      "price": "11995.00",
+      "options": [
+        {
+          "key": "tan"
+        },
+        {
+          "key": "44"
+        }
+      ]
+    },
+    {
+      "price": "11995.00",
+      "options": [
+        {
+          "key": "tan"
+        },
+        {
+          "key": "45"
+        }
+      ]
+    },
+    {
+      "price": "11995.00",
+      "options": [
+        {
+          "key": "tan"
+        },
+        {
+          "key": "46"
+        }
+      ]
+    },
+    {
+      "price": "11995.00",
+      "options": [
+        {
+          "key": "tan"
+        },
+        {
+          "key": "47"
+        }
+      ]
+    },
+    {
+      "price": "11995.00",
+      "options": [
+        {
+          "key": "tan"
+        },
+        {
+          "key": "48"
+        }
+      ]
+    },
+    {
+      "price": "14995.00",
+      "options": [
+        {
+          "key": "burgundy"
+        },
+        {
+          "key": "39"
+        }
+      ]
+    },
+    {
+      "price": "14995.00",
+      "options": [
+        {
+          "key": "burgundy"
+        },
+        {
+          "key": "40"
+        }
+      ]
+    },
+    {
+      "price": "14995.00",
+      "options": [
+        {
+          "key": "burgundy"
+        },
+        {
+          "key": "41"
+        }
+      ]
+    },
+    {
+      "price": "14995.00",
+      "options": [
+        {
+          "key": "burgundy"
+        },
+        {
+          "key": "42"
+        }
+      ]
+    },
+    {
+      "price": "14995.00",
+      "options": [
+        {
+          "key": "burgundy"
+        },
+        {
+          "key": "43"
+        }
+      ]
+    },
+    {
+      "price": "14995.00",
+      "options": [
+        {
+          "key": "burgundy"
+        },
+        {
+          "key": "44"
+        }
+      ]
+    },
+    {
+      "price": "14995.00",
+      "options": [
+        {
+          "key": "burgundy"
+        },
+        {
+          "key": "45"
+        }
+      ]
+    },
+    {
+      "price": "14995.00",
+      "options": [
+        {
+          "key": "burgundy"
+        },
+        {
+          "key": "46"
+        }
+      ]
+    },
+    {
+      "price": "14995.00",
+      "options": [
+        {
+          "key": "burgundy"
+        },
+        {
+          "key": "47"
+        }
+      ]
+    },
+    {
+      "price": "14995.00",
+      "options": [
+        {
+          "key": "burgundy"
+        },
+        {
+          "key": "48"
+        }
+      ]
+    },
+    {
+      "price": "12495.00",
+      "options": [
+        {
+          "key": "grey"
+        },
+        {
+          "key": "39"
+        }
+      ]
+    },
+    {
+      "price": "12495.00",
+      "options": [
+        {
+          "key": "grey"
+        },
+        {
+          "key": "40"
+        }
+      ]
+    },
+    {
+      "price": "12495.00",
+      "options": [
+        {
+          "key": "grey"
+        },
+        {
+          "key": "41"
+        }
+      ]
+    },
+    {
+      "price": "12495.00",
+      "options": [
+        {
+          "key": "grey"
+        },
+        {
+          "key": "42"
+        }
+      ]
+    },
+    {
+      "price": "12495.00",
+      "options": [
+        {
+          "key": "grey"
+        },
+        {
+          "key": "43"
+        }
+      ]
+    },
+    {
+      "price": "12495.00",
+      "options": [
+        {
+          "key": "grey"
+        },
+        {
+          "key": "44"
+        }
+      ]
+    },
+    {
+      "price": "12495.00",
+      "options": [
+        {
+          "key": "grey"
+        },
+        {
+          "key": "45"
+        }
+      ]
+    },
+    {
+      "price": "12495.00",
+      "options": [
+        {
+          "key": "grey"
+        },
+        {
+          "key": "46"
+        }
+      ]
+    },
+    {
+      "price": "12495.00",
+      "options": [
+        {
+          "key": "grey"
+        },
+        {
+          "key": "47"
+        }
+      ]
+    },
+    {
+      "price": "12495.00",
+      "options": [
+        {
+          "key": "grey"
+        },
+        {
+          "key": "48"
+        }
+      ]
+    }
+  ]
+}

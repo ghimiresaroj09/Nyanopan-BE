@@ -1,0 +1,25 @@
+# Core
+Django>=5.2,<6.0
+djangorestframework>=3.15,<4.0
+django-filter>=24,<26
+drf-spectacular>=0.27,<0.30
+djangorestframework-simplejwt>=5.3,<6.0
+django-cors-headers>=4.3,<5.0
+
+# Media / storage (Cloudinary SDK + Django storage backend, Pillow for validation)
+cloudinary>=1.40,<2.0
+django-cloudinary-storage==0.3.0
+Pillow>=10,<12
+
+# Database / config
+psycopg[binary]>=3.1,<4.0
+dj-database-url>=2,<3
+python-dotenv>=1,<2
+
+# Production serving
+gunicorn>=22,<24
+whitenoise>=6,<7
+
+# Testing
+pytest>=8,<9
+pytest-django>=4.5,<5

@@ -1,0 +1,119 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+#
+# Deploy: push this repo to GitHub, then in the Render Dashboard choose
+#   New +  ->  Blueprint  ->  pick the repo  ->  Apply.
+#
+# Database: this app uses an external Neon Postgres instance (ap-southeast-1,
+# the same region as the web service below). Nothing is provisioned by Render
+# here — you paste the two Neon connection strings when prompted:
+#
+#   DATABASE_URL           pooled  host "-pooler"  -> app traffic
+#   DATABASE_URL_UNPOOLED  direct  host no "-pooler" -> `migrate` in build.sh
+#
+# Variables marked `sync: false` are *not* stored in git: Render prompts for
+# them during creation, and you can edit them afterwards on the service's
+# Environment page.
+
+services:
+  - type: web
+    name: ecommerce-api
+    runtime: python
+    region: singapore # matches the Neon endpoint's region (ap-southeast-1)
+    # Free web services spin down after 15 minutes of inactivity (cold starts
+    # of ~30-60s). Paid plans start at the `starter` tier.
+    # plan: starter
+    buildCommand: bash build.sh # `bash` avoids depending on the exec bit being committed
+    startCommand: gunicorn config.wsgi:application -c gunicorn.conf.py
+
+    # Process-only probe: no database access. Render probes every few seconds,
+    # and a database-backed probe would keep the Neon compute permanently
+    # awake (~180 CU-hours/month against a ~100 CU-hour free allowance) until
+    # the project suspends. Use /api/health/ for uptime monitors instead.
+    healthCheckPath: /api/health/live/
+
+    # Keep-alive: Render itself cannot do this (its own health checks stop
+    # when the instance sleeps, and a cron job costs $1/month + instance
+    # hours). Ping /api/health/live/ every 10 minutes from a free external
+    # scheduler — .github/workflows/keepalive.yml is included; cron-job.org or
+    # UptimeRobot are tighter. See README "Keeping the free instance warm".
+
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+      - key: SECRET_KEY
+        generateValue: true # base64-encoded 256-bit secret
+      - key: PYTHON_VERSION
+        value: 3.13.14
+      - key: WEB_CONCURRENCY
+        value: 2
+      - key: GUNICORN_THREADS
+        value: 4
+      - key: SECURE_SSL_REDIRECT
+        value: "true"
+      - key: MAX_IMAGE_UPLOAD_MB
+        value: "5"
+
+      # --- Prompted on first deploy (paste in the Dashboard) ----------------
+      # Neon connection strings, in full, including ?sslmode=require
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_URL_UNPOOLED
+        sync: false
+      # Shared secret for the internal cron endpoints (cron-job.org sends it
+      # in the X-Cron-Secret header). Generated here, then copied into the
+      # scheduler. At least 16 characters or the endpoints stay disabled.
+      - key: CRON_SECRET
+        generateValue: true
+      # Cloudinary credentials: without these, uploads land on the instance's
+      # ephemeral disk and disappear on the next deploy.
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      # Auto-created the first time `migrate` runs with both values set.
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      # e.g. https://your-frontend.vercel.app,https://shop.example.com
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+
+      # --- Custom domain only ----------------------------------------------
+      # RENDER_EXTERNAL_HOSTNAME (*.onrender.com) is allowed automatically.
+      # For a custom domain set BOTH of these (comma-separated):
+      #   ALLOWED_HOSTS        = api.example.com
+      #   CSRF_TRUSTED_ORIGINS = https://api.example.com
+      # - key: ALLOWED_HOSTS
+      #   sync: false
+      # - key: CSRF_TRUSTED_ORIGINS
+      #   sync: false
+
+  # ---------------------------------------------------------------------------
+  # Optional: a Render cron job, for *real* scheduled work only.
+  #
+  # Not usable as a keep-alive: Render charges a $1/month minimum per cron job
+  # and its runs consume the same 750 free instance hours as the web service.
+  # Enable this if you want the expired-JWT rows swept up nightly (the table
+  # grows one row per login/refresh forever otherwise).
+  #
+  # - type: cron
+  #   name: ecommerce-token-cleanup
+  #   runtime: python
+  #   region: singapore
+  #   schedule: "0 3 * * *" # 03:00 UTC daily
+  #   buildCommand: pip install -r requirements.txt
+  #   startCommand: python manage.py flushexpiredtokens
+  #   envVars:
+  #     - key: DJANGO_SETTINGS_MODULE
+  #       value: config.settings.production
+  #     - key: SECRET_KEY
+  #       fromService:
+  #         type: web
+  #         name: ecommerce-api
+  #         envVarKey: SECRET_KEY
+  #     - key: DATABASE_URL
+  #       sync: false # paste the *direct* (unpooled) Neon URL
+  # ---------------------------------------------------------------------------
