@@ -41,6 +41,12 @@ echo "==> Available management commands:"
 python manage.py help | head -20
 
 echo "==> Running collectstatic"
+# Collectstatic doesn't access the database, so we can use a dummy DATABASE_URL
+# if the real one isn't set yet (e.g., on first deploy before environment is configured)
+if [ -z "${DATABASE_URL:-}" ]; then
+  echo "DATABASE_URL not set, using dummy value for collectstatic"
+  export DATABASE_URL="postgresql://dummy:dummy@localhost/dummy"
+fi
 python manage.py collectstatic --no-input --verbosity 2
 
 echo "==> Running database migrations"

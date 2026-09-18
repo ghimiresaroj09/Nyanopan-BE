@@ -25,8 +25,22 @@ except Exception as e:
 # ---------------------------------------------------------------------------
 DEBUG = False
 
-if not SECRET_KEY or SECRET_KEY.startswith("django-insecure"):
-    raise ImproperlyConfigured("A strong SECRET_KEY environment variable is required.")
+# During the build phase (collectstatic, migrate), SECRET_KEY validation is
+# relaxed because Render's auto-generated environment variables aren't available
+# yet. The check is strictly enforced when the application starts serving
+# requests (when gunicorn loads the WSGI application).
+_is_build_phase = any(
+    cmd in sys.argv 
+    for cmd in ["collectstatic", "migrate", "makemigrations", "check", "help"]
+)
+
+if not _is_build_phase:
+    # Strict validation at runtime
+    if not SECRET_KEY or SECRET_KEY.startswith("django-insecure"):
+        raise ImproperlyConfigured(
+            "A strong SECRET_KEY environment variable is required. "
+            "If deploying on Render, ensure SECRET_KEY is set in the environment."
+        )
 
 if DATABASES["default"]["ENGINE"] == "django.db.backends.sqlite3":
     raise ImproperlyConfigured("PostgreSQL (DATABASE_URL) is required in production.")
