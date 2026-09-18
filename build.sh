@@ -20,9 +20,13 @@ echo "==> Python version: $(python --version)"
 echo "==> Current directory: $(pwd)"
 echo "==> Virtual environment: ${VIRTUAL_ENV:-not set}"
 
+# Mark this as build phase so settings validation is relaxed
+export BUILD_PHASE=true
+
 # Fail loudly instead of silently building with development settings.
 export DJANGO_SETTINGS_MODULE="${DJANGO_SETTINGS_MODULE:-config.settings.production}"
 echo "==> DJANGO_SETTINGS_MODULE: $DJANGO_SETTINGS_MODULE"
+echo "==> BUILD_PHASE: $BUILD_PHASE"
 
 echo "==> Installing Python dependencies"
 python -m pip install --upgrade pip

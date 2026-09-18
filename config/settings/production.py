@@ -25,17 +25,21 @@ except Exception as e:
 # ---------------------------------------------------------------------------
 DEBUG = False
 
-# During the build phase (collectstatic, migrate), SECRET_KEY validation is
-# relaxed because Render's auto-generated environment variables aren't available
-# yet. The check is strictly enforced when the application starts serving
-# requests (when gunicorn loads the WSGI application).
-_is_build_phase = any(
+# During the build phase, SECRET_KEY validation is relaxed because Render's
+# auto-generated environment variables aren't available yet. The check is
+# strictly enforced when the application starts serving requests.
+# 
+# Build phase detection:
+# 1. Check for BUILD_PHASE environment variable (set in build.sh)
+# 2. Check if running management commands that don't need secrets
+_is_build_command = any(
     cmd in sys.argv 
     for cmd in ["collectstatic", "migrate", "makemigrations", "check", "help"]
 )
+_is_build_phase = env_bool("BUILD_PHASE", False) or _is_build_command
 
 if not _is_build_phase:
-    # Strict validation at runtime
+    # Strict validation at runtime (when gunicorn starts)
     if not SECRET_KEY or SECRET_KEY.startswith("django-insecure"):
         raise ImproperlyConfigured(
             "A strong SECRET_KEY environment variable is required. "
@@ -43,6 +47,7 @@ if not _is_build_phase:
         )
 
 if DATABASES["default"]["ENGINE"] == "django.db.backends.sqlite3":
+    raise ImproperlyConfigured("PostgreSQL (DATABASE_URL) is required in production.")
     raise ImproperlyConfigured("PostgreSQL (DATABASE_URL) is required in production.")
 
 # Reuse connections between requests, but verify them first: Neon suspends idle
