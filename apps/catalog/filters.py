@@ -5,13 +5,37 @@ from rest_framework.filters import OrderingFilter
 
 
 class ProductOrderingFilter(OrderingFilter):
-    """OrderingFilter with support for aliasing query params to annotations.
+    """OrderingFilter with support for aliasing query params to annotations and custom sort options.
 
-    ``?ordering=price`` sorts by the annotated ``min_price`` (cheapest active
-    variant), so DRF's plain field validation keeps working.
+    ``?ordering=price`` sorts by the annotated ``min_price`` (cheapest active variant).
+    
+    Supported ordering options:
+    - price: Low to High (by min_price)
+    - -price: High to Low (by max_price)
+    - name: A to Z
+    - -name: Z to A
+    - created_at: Previously Added (oldest first)
+    - -created_at: Recently Added (newest first, default)
+    
+    Friendly aliases:
+    - price_asc: Low to High
+    - price_desc: High to Low
+    - name_asc: A to Z
+    - name_desc: Z to A
+    - newest: Recently Added
+    - oldest: Previously Added
     """
 
-    FIELD_ALIASES = {"price": "min_price"}
+    FIELD_ALIASES = {
+        "price": "min_price",
+        # Friendly aliases for frontend
+        "price_asc": "min_price",
+        "price_desc": "-max_price",
+        "name_asc": "name",
+        "name_desc": "-name",
+        "newest": "-created_at",
+        "oldest": "created_at",
+    }
 
     def get_ordering(self, request, queryset, view):
         ordering = super().get_ordering(request, queryset, view)
@@ -19,6 +43,13 @@ class ProductOrderingFilter(OrderingFilter):
             return ordering
         aliased = []
         for term in ordering:
+            # Check if term is a friendly alias first
+            if term in self.FIELD_ALIASES:
+                alias_value = self.FIELD_ALIASES[term]
+                aliased.append(alias_value)
+                continue
+                
+            # Handle standard ordering with potential aliases
             descending = term.startswith("-")
             name = term[1:] if descending else term
             name = self.FIELD_ALIASES.get(name, name)
@@ -35,10 +66,20 @@ from .models import (
 
 
 class ProductFilter(django_filters.FilterSet):
-    """Public product filtering: category slug, gender, featured, price range."""
+    """Public product filtering: category slug, gender, usage_location, sole_type, featured, price range."""
 
     category = django_filters.CharFilter(field_name="category__slug", lookup_expr="iexact")
     gender = django_filters.ChoiceFilter(choices=Product._meta.get_field("gender").choices)
+    usage_location = django_filters.ChoiceFilter(
+        field_name="usage_location",
+        choices=Product._meta.get_field("usage_location").choices,
+        help_text="Filter by usage location: INSIDE, OUTSIDE, or BOTH"
+    )
+    sole_type = django_filters.ChoiceFilter(
+        field_name="sole_type",
+        choices=Product._meta.get_field("sole_type").choices,
+        help_text="Filter by sole type: LEATHER or RUBBER"
+    )
     is_featured = django_filters.BooleanFilter()
     min_price = django_filters.NumberFilter(method="filter_min_price")
     max_price = django_filters.NumberFilter(method="filter_max_price")

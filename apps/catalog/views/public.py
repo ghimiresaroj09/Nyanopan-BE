@@ -58,7 +58,34 @@ class AttributePublicViewSet(SuccessEnvelopeMixin, ReadOnlyModelViewSet):
     ordering = ["name"]
 
 
-@extend_schema(auth=[], tags=["Public - Products"])
+@extend_schema(
+    auth=[],
+    tags=["Public - Products"],
+    description=(
+        "List and retrieve products with filtering and sorting.\n\n"
+        "**Filtering options:**\n"
+        "- `category`: Filter by category slug (e.g., `?category=slippers`)\n"
+        "- `gender`: Filter by gender (`MEN`, `WOMEN`, `UNISEX`, `KIDS`, `BABY`)\n"
+        "- `usage_location`: Filter by usage location (`INSIDE`, `OUTSIDE`, `BOTH`)\n"
+        "- `sole_type`: Filter by sole type (`LEATHER`, `RUBBER`)\n"
+        "- `is_featured`: Filter featured products (`true`/`false`)\n"
+        "- `min_price`: Filter by minimum price (e.g., `?min_price=1000`)\n"
+        "- `max_price`: Filter by maximum price (e.g., `?max_price=5000`)\n\n"
+        "**Sorting options (use `?ordering=`):**\n"
+        "- `price_asc` or `price`: Low to High (by minimum price)\n"
+        "- `price_desc` or `-price`: High to Low (by maximum price)\n"
+        "- `name_asc` or `name`: A to Z\n"
+        "- `name_desc` or `-name`: Z to A\n"
+        "- `newest` or `-created_at`: Recently Added (default)\n"
+        "- `oldest` or `created_at`: Previously Added\n\n"
+        "**Search:**\n"
+        "Use `?search=` to search across product name, description, model name, and category name.\n\n"
+        "**Examples:**\n"
+        "- `?gender=UNISEX&usage_location=INSIDE&ordering=price_asc`\n"
+        "- `?category=slippers&sole_type=RUBBER&ordering=newest`\n"
+        "- `?is_featured=true&min_price=1000&max_price=5000&ordering=name_asc`"
+    ),
+)
 class ProductPublicViewSet(SuccessEnvelopeMixin, ReadOnlyModelViewSet):
     lookup_field = "slug"
     lookup_url_kwarg = "slug"
