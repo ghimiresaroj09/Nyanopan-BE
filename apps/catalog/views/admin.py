@@ -153,6 +153,7 @@ PRODUCT_STEP1_EXAMPLE = OpenApiExample(
         "model": "celsi",
         "gender": "UNISEX",
         "usage_location": "INSIDE",  # Optional: INSIDE, OUTSIDE, or BOTH (default)
+        "sole_type": "RUBBER",  # Optional: LEATHER or RUBBER
         "description": "Warm and comfortable wool felt slippers perfect for indoor use.",
         "category": "slippers",  # Can use category UUID or slug
         "is_active": True,

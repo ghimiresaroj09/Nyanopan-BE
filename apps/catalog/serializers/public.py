@@ -223,6 +223,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     is_active = serializers.BooleanField()
     is_featured = serializers.BooleanField()
     usage_location = serializers.CharField()
+    sole_type = serializers.CharField(required=False, allow_null=True)
     materials_used = serializers.CharField()
     general_information = serializers.CharField()
     key_features = serializers.JSONField()
@@ -237,6 +238,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "model",
             "gender",
             "usage_location",
+            "sole_type",
             "attributes",
             "category",
             "feature_image",

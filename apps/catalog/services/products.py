@@ -32,6 +32,7 @@ _PRODUCT_SCALAR_FIELDS = (
     "model",
     "gender",
     "usage_location",
+    "sole_type",
     "description",
     "general_information",
     "materials_used",

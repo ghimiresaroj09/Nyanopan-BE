@@ -70,6 +70,12 @@ class UsageLocation(models.TextChoices):
     BOTH = "BOTH", "Both"
 
 
+class SoleType(models.TextChoices):
+    """Type of sole material."""
+    LEATHER = "LEATHER", "Leather"
+    RUBBER = "RUBBER", "Rubber"
+
+
 class ImageMetadataMixin(models.Model):
     """Cloudinary image + presentation metadata for a single image field.
 
@@ -148,6 +154,13 @@ class Product(TimeStampedModel, SluggedModelMixin):
         default=UsageLocation.BOTH,
         blank=True,
         help_text="Where the product is intended to be used (Inside, Outside, or Both).",
+    )
+    sole_type = models.CharField(
+        max_length=10,
+        choices=SoleType.choices,
+        blank=True,
+        null=True,
+        help_text="Type of sole material (Leather or Rubber).",
     )
     description = models.TextField(blank=True, default="")
     general_information = models.TextField(blank=True, default="")
