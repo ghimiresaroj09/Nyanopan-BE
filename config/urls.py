@@ -25,7 +25,9 @@ urlpatterns = [
     path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
     # Versioned API
     path("api/v1/", include("apps.catalog.urls")),
+    path("api/v1/", include("apps.cms.urls")),
     path("api/v1/admin/", include("apps.catalog.urls_admin")),
+    path("api/v1/admin/", include("apps.cms.urls_admin")),
     path("api/v1/admin/auth/", include("apps.accounts.urls")),
     # Token-guarded jobs called by the external scheduler (cron-job.org).
     path("api/v1/internal/", include("apps.common.urls")),
