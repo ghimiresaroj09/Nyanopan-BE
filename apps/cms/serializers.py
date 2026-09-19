@@ -253,22 +253,22 @@ class StorySubsectionPublicSerializer(serializers.ModelSerializer):
 
 class Section1Serializer(serializers.Serializer):
     """Nested serializer for Section 1."""
-    title = serializers.CharField(source='section1_title')
-    description = serializers.CharField(source='section1_description')
-    image = serializers.CharField(source='section1_image')
+    title = serializers.CharField(source='section1_title', required=False, allow_blank=True)
+    description = serializers.CharField(source='section1_description', required=False, allow_blank=True)
+    image = serializers.CharField(source='section1_image', required=False, allow_blank=True, allow_null=True)
 
 
 class Section2Serializer(serializers.Serializer):
     """Nested serializer for Section 2."""
-    title = serializers.CharField(source='section2_title')
-    description = serializers.CharField(source='section2_description')
-    image = serializers.CharField(source='section2_image')
+    title = serializers.CharField(source='section2_title', required=False, allow_blank=True)
+    description = serializers.CharField(source='section2_description', required=False, allow_blank=True)
+    image = serializers.CharField(source='section2_image', required=False, allow_blank=True, allow_null=True)
 
 
 class Section3Serializer(serializers.Serializer):
     """Nested serializer for Section 3 with subsections."""
-    title = serializers.CharField(source='section3_title')
-    subsections = StorySubsectionSerializer(source='section3_subsections', many=True, read_only=False)
+    title = serializers.CharField(source='section3_title', required=False, allow_blank=True)
+    subsections = StorySubsectionSerializer(source='section3_subsections', many=True, read_only=False, required=False)
 
 
 class Section3PublicSerializer(serializers.Serializer):
@@ -285,9 +285,9 @@ class Section3PublicSerializer(serializers.Serializer):
 class OurStorySerializer(serializers.ModelSerializer):
     """Our Story page serializer with nested sections."""
     
-    section1 = Section1Serializer(source='*', read_only=True)
-    section2 = Section2Serializer(source='*', read_only=True)
-    section3 = Section3Serializer(source='*')
+    section1 = Section1Serializer(source='*', required=False)
+    section2 = Section2Serializer(source='*', required=False)
+    section3 = Section3Serializer(source='*', required=False)
     
     class Meta:
         model = OurStory
@@ -308,12 +308,22 @@ class OurStorySerializer(serializers.ModelSerializer):
         # Update simple fields
         instance.title = validated_data.get('title', instance.title)
         instance.description = validated_data.get('description', instance.description)
+        
+        # Update section1 fields (check both nested and flat formats)
         instance.section1_title = validated_data.get('section1_title', instance.section1_title)
         instance.section1_description = validated_data.get('section1_description', instance.section1_description)
-        instance.section1_image = validated_data.get('section1_image', instance.section1_image)
+        section1_image = validated_data.get('section1_image')
+        if section1_image is not None:
+            instance.section1_image = section1_image if section1_image != '' else None
+        
+        # Update section2 fields
         instance.section2_title = validated_data.get('section2_title', instance.section2_title)
         instance.section2_description = validated_data.get('section2_description', instance.section2_description)
-        instance.section2_image = validated_data.get('section2_image', instance.section2_image)
+        section2_image = validated_data.get('section2_image')
+        if section2_image is not None:
+            instance.section2_image = section2_image if section2_image != '' else None
+        
+        # Update section3 title
         instance.section3_title = validated_data.get('section3_title', instance.section3_title)
         
         # Handle subsections if provided
@@ -324,6 +334,11 @@ class OurStorySerializer(serializers.ModelSerializer):
             
             for subsection_data in subsections_data:
                 subsection_id = subsection_data.get('id')
+                
+                # Clean up empty image strings
+                if 'image' in subsection_data and subsection_data['image'] == '':
+                    subsection_data['image'] = None
+                
                 if subsection_id:
                     # Update existing
                     StorySubsection.objects.filter(id=subsection_id, our_story=instance).update(**{
@@ -398,7 +413,7 @@ class SustainabilitySectionPublicSerializer(serializers.ModelSerializer):
 class OurSustainabilitySerializer(serializers.ModelSerializer):
     """Our Sustainability page serializer with nested sections."""
     
-    sections = SustainabilitySectionSerializer(many=True, read_only=False)
+    sections = SustainabilitySectionSerializer(many=True, read_only=False, required=False)
     
     class Meta:
         model = OurSustainability
@@ -426,6 +441,11 @@ class OurSustainabilitySerializer(serializers.ModelSerializer):
             
             for section_data in sections_data:
                 section_id = section_data.get('id')
+                
+                # Clean up empty image strings
+                if 'image' in section_data and section_data['image'] == '':
+                    section_data['image'] = None
+                
                 if section_id:
                     # Update existing
                     SustainabilitySection.objects.filter(id=section_id, our_sustainability=instance).update(**{
