@@ -98,7 +98,14 @@ PAV_JSON_EXAMPLE = OpenApiExample(
 )
 
 PRODUCT_JSON_EXAMPLE = OpenApiExample(
-    "Product with nested values and variants",
+    "Product with nested values and variants (all-in-one)",
+    description=(
+        "Complete product creation including nested attribute values and variants. "
+        "While possible to create everything at once, the recommended 3-step flow is:\n"
+        "1. Create product info (this endpoint with basic fields only)\n"
+        "2. Add variants via /productvarientvalues/{product_id}/\n"
+        "3. Upload images via /productvarientimages/{product_id}/"
+    ),
     value={
         "name": "Celsi Wool Felt Slippers",
         "model": "celsi",
@@ -129,6 +136,30 @@ PRODUCT_JSON_EXAMPLE = OpenApiExample(
                 "price": "5995.00",
                 "options": [{"key": "grey"}, {"key": "40"}],
             }
+        ],
+    },
+    request_only=True,
+    media_type="application/json",
+)
+
+PRODUCT_STEP1_EXAMPLE = OpenApiExample(
+    "Step 1: Product info only (recommended)",
+    description=(
+        "Recommended approach for Step 1: create the product with basic info only. "
+        "Add variants in Step 2 and images in Step 3 using the returned product ID."
+    ),
+    value={
+        "name": "Celsi Wool Felt Slippers",
+        "model": "celsi",
+        "gender": "UNISEX",
+        "description": "Warm and comfortable wool felt slippers perfect for indoor use.",
+        "category": "slippers",  # Can use category UUID or slug
+        "is_active": True,
+        "is_featured": True,
+        "key_features": [
+            {"title": "Material", "value": "100% Wool Felt"},
+            {"title": "Sole", "value": "Rubber"},
+            {"title": "Care", "value": "Spot clean only"},
         ],
     },
     request_only=True,
@@ -543,16 +574,23 @@ class AdminProductViewSet(MultipartDataMixin, AdminViewSetMixin, ModelViewSet):
         },
         responses={201: ProductAdminResponseSerializer},
         summary="Step 1: Add product info",
-        description="Step 1 of the product flow: create the product with its "
-        "info (name, category, model, description). Nested values/variants "
-        "are also accepted here, but the guided flow adds them in step 2 "
-        "using the returned product id. "
-        + _PRODUCT_MULTIPART_HELP
-        + " "
-        + _HUMAN_KEYS_HELP
-        + " "
-        + _DATA_URI_HELP,
-        examples=[PRODUCT_JSON_EXAMPLE],
+        description=(
+            "Step 1 of the product flow: create the product with its "
+            "basic info (name, category, model, description, key features).\n\n"
+            "**Recommended flow:**\n"
+            "1. Use this endpoint to create product with basic info only\n"
+            "2. Note the returned `product.id`\n"
+            "3. Use that ID in Step 2 to add variants and prices\n"
+            "4. Use that ID in Step 3 to upload images\n\n"
+            "**Advanced:** Nested values/variants are also accepted here for "
+            "all-in-one creation, but the guided 3-step flow is recommended. "
+            + _PRODUCT_MULTIPART_HELP
+            + " "
+            + _HUMAN_KEYS_HELP
+            + " "
+            + _DATA_URI_HELP
+        ),
+        examples=[PRODUCT_STEP1_EXAMPLE, PRODUCT_JSON_EXAMPLE],
     )
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
