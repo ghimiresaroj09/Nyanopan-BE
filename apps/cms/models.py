@@ -360,3 +360,88 @@ class StorySubsection(TimeStampedModel):
     
     def __str__(self):
         return self.title
+
+
+
+class OurSustainability(TimeStampedModel):
+    """Our Sustainability page (singleton model).
+    
+    Displays sustainability initiatives and commitments.
+    Only one instance should exist.
+    """
+    
+    # Override parent's UUID field with integer PK for singleton pattern
+    id = models.AutoField(primary_key=True)
+    
+    title = models.CharField(
+        max_length=255,
+        default="Our Sustainability",
+        help_text="Page title"
+    )
+    description = models.TextField(
+        blank=True,
+        help_text="Introduction text about sustainability commitment"
+    )
+    
+    class Meta:
+        verbose_name = "Our Sustainability"
+        verbose_name_plural = "Our Sustainability"
+        db_table = "cms_our_sustainability"
+    
+    def __str__(self):
+        return self.title
+    
+    def save(self, *args, **kwargs):
+        """Ensure only one instance exists (singleton pattern)."""
+        if not self.pk and OurSustainability.objects.exists():
+            raise ValidationError(
+                "Only one Our Sustainability instance is allowed. "
+                "Please update the existing page."
+            )
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_page(cls):
+        """Get or create the singleton page instance."""
+        page, created = cls.objects.get_or_create(pk=1)
+        return page
+
+
+class SustainabilitySection(TimeStampedModel):
+    """Sections for Our Sustainability page."""
+    
+    our_sustainability = models.ForeignKey(
+        OurSustainability,
+        on_delete=models.CASCADE,
+        related_name='sections',
+        help_text="Our Sustainability page this section belongs to"
+    )
+    title = models.CharField(
+        max_length=255,
+        help_text="Section title"
+    )
+    description = models.TextField(
+        help_text="Section description"
+    )
+    image = models.CharField(
+        max_length=500,
+        blank=True,
+        help_text="Section image (Cloudinary URL or reference)"
+    )
+    sort_order = models.IntegerField(
+        default=0,
+        help_text="Display order (lower numbers appear first)"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether this section is currently displayed"
+    )
+    
+    class Meta:
+        verbose_name = "Sustainability Section"
+        verbose_name_plural = "Sustainability Sections"
+        db_table = "cms_sustainability_section"
+        ordering = ['sort_order', 'created_at']
+    
+    def __str__(self):
+        return self.title

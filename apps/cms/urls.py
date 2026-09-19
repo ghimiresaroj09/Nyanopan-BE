@@ -6,6 +6,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     OurMakersPublicView,
     OurStoryPublicView,
+    OurSustainabilityPublicView,
     PolicyPublicViewSet,
     SiteConfigurationPublicView,
 )
@@ -19,5 +20,6 @@ urlpatterns = [
     path("configuration/", SiteConfigurationPublicView.as_view(), name="configuration-public"),
     path("our-makers/", OurMakersPublicView.as_view(), name="our-makers-public"),
     path("our-story/", OurStoryPublicView.as_view(), name="our-story-public"),
+    path("our-sustainability/", OurSustainabilityPublicView.as_view(), name="our-sustainability-public"),
 ] + router.urls
 

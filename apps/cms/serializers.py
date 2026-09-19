@@ -310,3 +310,71 @@ class OurStoryPublicSerializer(serializers.ModelSerializer):
             'section2',
             'section3',
         ]
+
+
+
+from .models import OurSustainability, SustainabilitySection
+
+
+class SustainabilitySectionSerializer(serializers.ModelSerializer):
+    """Sustainability section serializer."""
+    
+    class Meta:
+        model = SustainabilitySection
+        fields = [
+            'id',
+            'title',
+            'description',
+            'image',
+            'sort_order',
+            'is_active',
+        ]
+
+
+class SustainabilitySectionPublicSerializer(serializers.ModelSerializer):
+    """Public read-only serializer for sustainability sections."""
+    
+    class Meta:
+        model = SustainabilitySection
+        fields = [
+            'title',
+            'description',
+            'image',
+        ]
+
+
+class OurSustainabilitySerializer(serializers.ModelSerializer):
+    """Our Sustainability page serializer with nested sections."""
+    
+    sections = SustainabilitySectionSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = OurSustainability
+        fields = [
+            'id',
+            'title',
+            'description',
+            'sections',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class OurSustainabilityPublicSerializer(serializers.ModelSerializer):
+    """Public read-only serializer for Our Sustainability page."""
+    
+    sections = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = OurSustainability
+        fields = [
+            'title',
+            'description',
+            'sections',
+        ]
+    
+    def get_sections(self, obj):
+        """Only include active sections in public response."""
+        active_sections = obj.sections.filter(is_active=True).order_by('sort_order', 'created_at')
+        return SustainabilitySectionPublicSerializer(active_sections, many=True).data

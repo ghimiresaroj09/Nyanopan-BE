@@ -9,17 +9,29 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from apps.common.responses import SuccessEnvelopeMixin
 
-from .models import OurMakers, OurStory, Policy, SiteConfiguration, StorySubsection, TeamMember
+from .models import (
+    OurMakers,
+    OurStory,
+    OurSustainability,
+    Policy,
+    SiteConfiguration,
+    StorySubsection,
+    SustainabilitySection,
+    TeamMember,
+)
 from .serializers import (
     OurMakersPublicSerializer,
     OurMakersSerializer,
     OurStoryPublicSerializer,
     OurStorySerializer,
+    OurSustainabilityPublicSerializer,
+    OurSustainabilitySerializer,
     PolicyPublicSerializer,
     PolicySerializer,
     SiteConfigurationPublicSerializer,
     SiteConfigurationSerializer,
     StorySubsectionSerializer,
+    SustainabilitySectionSerializer,
     TeamMemberSerializer,
 )
 
@@ -245,3 +257,63 @@ class StorySubsectionAdminViewSet(SuccessEnvelopeMixin, ModelViewSet):
         elif request and request.method == 'DELETE':
             return "Subsection deleted successfully."
         return "Subsection retrieved successfully."
+
+
+
+@extend_schema(
+    auth=[],
+    tags=["Public - Our Sustainability"],
+    description="Get Our Sustainability page with sections. No authentication required.",
+)
+class OurSustainabilityPublicView(SuccessEnvelopeMixin, RetrieveAPIView):
+    """Public read-only endpoint for Our Sustainability page."""
+    
+    serializer_class = OurSustainabilityPublicSerializer
+    success_message = "Our Sustainability page retrieved successfully."
+    permission_classes = []
+    authentication_classes = []
+    
+    def get_object(self):
+        return OurSustainability.get_page()
+
+
+@extend_schema(
+    tags=["Admin - Our Sustainability"],
+    description="Manage Our Sustainability page. Admin access only.",
+)
+class OurSustainabilityAdminView(SuccessEnvelopeMixin, RetrieveUpdateAPIView):
+    """Admin endpoint to view and update Our Sustainability page."""
+    
+    serializer_class = OurSustainabilitySerializer
+    permission_classes = [IsAdminUser]
+    
+    def get_success_message(self, request=None):
+        if request and request.method in ['PUT', 'PATCH']:
+            return "Our Sustainability page updated successfully."
+        return "Our Sustainability page retrieved successfully."
+    
+    def get_object(self):
+        return OurSustainability.get_page()
+
+
+@extend_schema(
+    tags=["Admin - Sustainability Sections"],
+    description="Manage sustainability sections. Admin access only.",
+)
+class SustainabilitySectionAdminViewSet(SuccessEnvelopeMixin, ModelViewSet):
+    """Admin endpoint to manage sustainability sections."""
+    
+    serializer_class = SustainabilitySectionSerializer
+    permission_classes = [IsAdminUser]
+    queryset = SustainabilitySection.objects.all().order_by('sort_order', 'created_at')
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['is_active', 'our_sustainability']
+    
+    def get_success_message(self, request=None):
+        if request and request.method == 'POST':
+            return "Section created successfully."
+        elif request and request.method in ['PUT', 'PATCH']:
+            return "Section updated successfully."
+        elif request and request.method == 'DELETE':
+            return "Section deleted successfully."
+        return "Section retrieved successfully."

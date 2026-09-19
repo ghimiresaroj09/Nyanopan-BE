@@ -2,7 +2,16 @@
 
 from django.contrib import admin
 
-from .models import OurMakers, OurStory, Policy, SiteConfiguration, StorySubsection, TeamMember
+from .models import (
+    OurMakers,
+    OurStory,
+    OurSustainability,
+    Policy,
+    SiteConfiguration,
+    StorySubsection,
+    SustainabilitySection,
+    TeamMember,
+)
 
 
 @admin.register(SiteConfiguration)
@@ -192,6 +201,68 @@ class StorySubsectionAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Subsection Content', {
             'fields': ('our_story', 'title', 'image', 'description'),
+        }),
+        ('Display Settings', {
+            'fields': ('sort_order', 'is_active'),
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
+    
+    readonly_fields = ['created_at', 'updated_at']
+
+
+
+class SustainabilitySectionInline(admin.TabularInline):
+    """Inline admin for sustainability sections."""
+    model = SustainabilitySection
+    extra = 1
+    fields = ['title', 'description', 'image', 'sort_order', 'is_active']
+    ordering = ['sort_order', 'created_at']
+
+
+@admin.register(OurSustainability)
+class OurSustainabilityAdmin(admin.ModelAdmin):
+    """Admin interface for Our Sustainability page."""
+    
+    list_display = ['title', 'created_at', 'updated_at']
+    inlines = [SustainabilitySectionInline]
+    
+    fieldsets = (
+        ('Page Content', {
+            'fields': ('title', 'description'),
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
+    
+    readonly_fields = ['created_at', 'updated_at']
+    
+    def has_add_permission(self, request):
+        """Only allow one instance (singleton)."""
+        return not OurSustainability.objects.exists()
+    
+    def has_delete_permission(self, request, obj=None):
+        """Prevent deletion of the page."""
+        return False
+
+
+@admin.register(SustainabilitySection)
+class SustainabilitySectionAdmin(admin.ModelAdmin):
+    """Admin interface for sustainability sections."""
+    
+    list_display = ['title', 'sort_order', 'is_active', 'created_at']
+    list_filter = ['is_active', 'created_at']
+    search_fields = ['title', 'description']
+    ordering = ['sort_order', 'created_at']
+    
+    fieldsets = (
+        ('Section Content', {
+            'fields': ('our_sustainability', 'title', 'description', 'image'),
         }),
         ('Display Settings', {
             'fields': ('sort_order', 'is_active'),
