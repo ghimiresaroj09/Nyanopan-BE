@@ -126,7 +126,8 @@ class AttributeAdminSerializer(serializers.ModelSerializer):
         max_length=200,
         help_text=(
             "Value names to create with the attribute (all-or-nothing on create), "
-            "or ensure exist on update (existing names are left untouched)."
+            "or replace all values on update (removes values not in the list, "
+            "adds new ones, keeps existing ones)."
         ),
     )
     values = serializers.SerializerMethodField(read_only=True)

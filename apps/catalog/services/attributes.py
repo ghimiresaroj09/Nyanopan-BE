@@ -101,7 +101,19 @@ class AttributeService:
             raise to_drf_validation_error(exc)
         attribute.save()
         if value_names is not None:
+            # Replace all values: delete removed ones, add new ones, keep existing
+            value_names_list = list(value_names)
+            value_names_set = set(value_names_list)
+            
+            # Get all current values for this attribute
+            existing_values = AttributeValue.objects.filter(attribute=attribute)
+            
+            # Delete values that are no longer in the list
+            to_delete = existing_values.exclude(name__in=value_names_set)
+            to_delete.delete()
+            
+            # Add new values that don't exist yet (same as before)
             AttributeValueService.ensure_values(
-                attribute=attribute, names=list(value_names)
+                attribute=attribute, names=value_names_list
             )
         return attribute
