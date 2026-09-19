@@ -11,6 +11,7 @@ from apps.catalog.services.products import (
     ProductService,
 )
 from apps.catalog.services.variants import VariantService
+from apps.common.utilities import format_price
 from apps.common.validators import validate_image_upload
 
 from ..models import (
@@ -35,6 +36,27 @@ from .fields import (
 from .public import CategoryNestedSerializer, ProductModelNestedSerializer
 
 MISSING = object()
+
+# Schema for OpenAPI
+IMAGE_SCHEMA = {
+    "type": "object",
+    "nullable": True,
+    "properties": {
+        "url": {"type": "string", "format": "uri"},
+        "title": {"type": "string"},
+        "caption": {"type": "string"},
+        "alt": {"type": "string"},
+    },
+}
+
+PRICE_RANGE_SCHEMA = {
+    "type": "object",
+    "nullable": True,
+    "properties": {
+        "min_price": {"type": "string", "example": "5995.00"},
+        "max_price": {"type": "string", "example": "6495.00"},
+    },
+}
 
 
 def _resolve_value_name(attribute, name):
@@ -566,6 +588,73 @@ class CategoryObjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ["id", "name", "slug", "description", "isActive"]
+
+
+class ProductAdminListSerializer(serializers.ModelSerializer):
+    """Lightweight product list for admin - essential fields only."""
+    
+    category = CategoryObjectSerializer(read_only=True)
+    model = ProductModelObjectSerializer(read_only=True)
+    price_range = serializers.SerializerMethodField()
+    primary_image = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Product
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "gender",
+            "category",
+            "model",
+            "is_active",
+            "is_featured",
+            "price_range",
+            "primary_image",
+            "created_at",
+            "updated_at",
+        ]
+    
+    def _prefetched_variants(self, obj):
+        variants = getattr(obj, "prefetched_variants", None)
+        if variants is None:
+            variants = list(
+                obj.variants.filter(is_active=True)
+                .order_by("price", "id")
+            )
+        return list(variants)
+    
+    @extend_schema_field(PRICE_RANGE_SCHEMA)
+    def get_price_range(self, obj):
+        variants = self._prefetched_variants(obj)
+        if not variants:
+            return None
+        cheapest = variants[0]
+        dearest = variants[-1]
+        return {
+            "min_price": format_price(cheapest.price),
+            "max_price": format_price(dearest.price),
+        }
+    
+    @extend_schema_field(IMAGE_SCHEMA)
+    def get_primary_image(self, obj):
+        images = getattr(obj, "prefetched_images", None)
+        if images is None:
+            pav = (
+                obj.attribute_values.filter(
+                    is_active=True,
+                    attribute__is_active=True,
+                    attribute_value__is_active=True,
+                )
+                .exclude(feature_image="")
+                .order_by("-attribute__requires_image", "id")
+                .first()
+            )
+        else:
+            pav = images[0] if images else None
+        if not pav or not pav.feature_image.name:
+            return None
+        return ImageObjectField(prefix="feature_image").to_representation(pav)
 
 
 class ProductAdminResponseSerializer(serializers.ModelSerializer):

@@ -43,6 +43,7 @@ from ..serializers.admin import (
     ImageDeleteSerializer,
     ImageUploadSerializer,
     ImageUploadResponseSerializer,
+    ProductAdminListSerializer,
     ProductAdminResponseSerializer,
     ProductAdminWriteSerializer,
     ProductAttributeValueAdminSerializer,
@@ -567,6 +568,8 @@ class AdminProductViewSet(MultipartDataMixin, AdminViewSetMixin, ModelViewSet):
     def get_serializer_class(self):
         if self.action in {"create", "update", "partial_update"}:
             return ProductAdminWriteSerializer
+        elif self.action == "list":
+            return ProductAdminListSerializer
         return ProductAdminResponseSerializer
 
     def _read_response(self, instance, *, status_code):
