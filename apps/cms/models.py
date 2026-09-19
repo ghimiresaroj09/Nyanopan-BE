@@ -1,4 +1,4 @@
-"""CMS models for site configuration."""
+"""CMS models for site configuration and policies."""
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -94,3 +94,54 @@ class SiteConfiguration(TimeStampedModel):
         """Get or create the singleton configuration instance."""
         config, created = cls.objects.get_or_create(pk=1)
         return config
+
+
+
+class PolicyType(models.TextChoices):
+    """Types of policies available."""
+    SHIPPING = "SHIPPING", "Shipping"
+    EXCHANGES_RETURNS = "EXCHANGES_RETURNS", "Exchanges & Returns"
+    PRIVACY_POLICY = "PRIVACY_POLICY", "Privacy Policy"
+    TERMS_CONDITIONS = "TERMS_CONDITIONS", "Terms and Conditions"
+
+
+class Policy(TimeStampedModel):
+    """Policy documents (shipping, returns, privacy, terms, etc.).
+    
+    Each policy type can only have one active document.
+    Content is stored as rich text (HTML from frontend editor).
+    """
+    
+    type = models.CharField(
+        max_length=50,
+        choices=PolicyType.choices,
+        unique=True,
+        db_index=True,
+        help_text="Type of policy document"
+    )
+    title = models.CharField(
+        max_length=255,
+        help_text="Policy title (e.g., 'Shipping Policy', 'Privacy Policy')"
+    )
+    content = models.TextField(
+        help_text="Policy content in HTML format (from rich text editor)"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether this policy is currently active and visible"
+    )
+    
+    class Meta:
+        verbose_name = "Policy"
+        verbose_name_plural = "Policies"
+        db_table = "cms_policy"
+        ordering = ['type']
+    
+    def __str__(self):
+        return f"{self.get_type_display()}"
+    
+    def save(self, *args, **kwargs):
+        """Ensure title is set if empty."""
+        if not self.title:
+            self.title = self.get_type_display()
+        super().save(*args, **kwargs)

@@ -88,3 +88,43 @@ class SiteConfigurationPublicSerializer(serializers.ModelSerializer):
         social_data = data.pop('social', {})
         data['social'] = social_data
         return data
+
+
+
+from .models import Policy
+
+
+class PolicySerializer(serializers.ModelSerializer):
+    """Policy serializer for admin operations."""
+    
+    type_display = serializers.CharField(source='get_type_display', read_only=True)
+    
+    class Meta:
+        model = Policy
+        fields = [
+            'id',
+            'type',
+            'type_display',
+            'title',
+            'content',
+            'is_active',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class PolicyPublicSerializer(serializers.ModelSerializer):
+    """Public read-only serializer for policies."""
+    
+    type_display = serializers.CharField(source='get_type_display', read_only=True)
+    
+    class Meta:
+        model = Policy
+        fields = [
+            'id',
+            'type',
+            'type_display',
+            'title',
+            'content',
+        ]
