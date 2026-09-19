@@ -38,6 +38,7 @@ _PRODUCT_SCALAR_FIELDS = (
     "is_featured",
     "is_active",
     "key_features",
+    # Note: feature_image is handled separately via ImageService
 )
 
 
@@ -249,6 +250,12 @@ class ProductService:
             user=user,
             **{key: data[key] for key in _PRODUCT_SCALAR_FIELDS if key in data},
         )
+        
+        # Handle feature image
+        if "feature_image" in data:
+            ImageService.set_image(product, "feature_image", data["feature_image"])
+            ImageService.apply_metadata(product, "feature_image", data["feature_image"])
+        
         try:
             product.full_clean()
         except DjangoValidationError as exc:
@@ -283,6 +290,17 @@ class ProductService:
         for field in _PRODUCT_SCALAR_FIELDS:
             if field in data:
                 setattr(product, field, data[field])
+        
+        # Handle feature image
+        if "feature_image" in data:
+            old_feature_name = ImageService.set_image(
+                product, "feature_image", data["feature_image"]
+            )
+            ImageService.apply_metadata(product, "feature_image", data["feature_image"])
+            # Clean up old image if replaced
+            if old_feature_name:
+                ImageService.schedule_cleanup([old_feature_name])
+        
         try:
             product.full_clean()
         except DjangoValidationError as exc:
@@ -307,16 +325,27 @@ class ProductService:
         PROTECT their product attribute values, so options, variants, and
         values are deleted explicitly before the product row itself.
         """
-        names = list(
+        # Collect all image names for cleanup
+        names = []
+        
+        # Product featured image
+        if product.feature_image.name:
+            names.append(product.feature_image.name)
+        
+        # Product attribute value images
+        names += list(
             ProductAttributeValue.objects.filter(product=product).values_list(
                 "feature_image", flat=True
             )
         )
+        
+        # Additional images
         names += list(
             ProductAttributeImage.objects.filter(
                 product_attribute_value__product=product
             ).values_list("image", flat=True)
         )
+        
         ProductVariantOption.objects.filter(variant__product=product).delete()
         ProductVariant.objects.filter(product=product).delete()
         ProductAttributeValue.objects.filter(product=product).delete()

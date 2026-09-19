@@ -493,6 +493,9 @@ class ProductAdminWriteSerializer(serializers.ModelSerializer):
         help_text="Category UUID or slug.",
     )
     key_features = KeyFeaturesField(required=False)
+    feature_image = ImageObjectField(
+        prefix="feature_image", required=False, allow_null=True
+    )
     attribute_values = ProductAttributeValueNestedSerializer(many=True, required=False)
     variants = VariantNestedSerializer(many=True, required=False)
 
@@ -511,6 +514,7 @@ class ProductAdminWriteSerializer(serializers.ModelSerializer):
             "is_featured",
             "is_active",
             "key_features",
+            "feature_image",
             "attribute_values",
             "variants",
         ]
@@ -571,6 +575,9 @@ class ProductAdminResponseSerializer(serializers.ModelSerializer):
 
     model = ProductModelObjectSerializer(read_only=True)
     category = CategoryObjectSerializer(read_only=True)
+    feature_image = ImageObjectField(
+        prefix="feature_image", include_public_id=False, read_only=True
+    )
 
     class Meta:
         model = Product
@@ -585,6 +592,7 @@ class ProductAdminResponseSerializer(serializers.ModelSerializer):
             "category",
             "is_featured",
             "key_features",
+            "feature_image",
         ]
 
 
@@ -652,6 +660,11 @@ class ProductMultipartSerializer(ProductAdminWriteSerializer):
     strings, with image slots referencing file parts via {"file": "<part-name>"}.
     """
 
+    feature_image = serializers.ImageField(
+        required=False,
+        allow_null=True,
+        help_text="Binary product featured image file. Omit to keep, null to clear.",
+    )
     attribute_values = serializers.CharField(
         required=False,
         help_text=(

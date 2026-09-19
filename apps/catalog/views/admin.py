@@ -156,6 +156,11 @@ PRODUCT_STEP1_EXAMPLE = OpenApiExample(
         "category": "slippers",  # Can use category UUID or slug
         "is_active": True,
         "is_featured": True,
+        "feature_image": {
+            "url": "https://res.cloudinary.com/demo/image/upload/sample.jpg",
+            "title": "Celsi Wool Felt Slippers",
+            "alt": "Warm wool felt slippers main image",
+        },
         "key_features": [
             {"title": "Material", "value": "100% Wool Felt"},
             {"title": "Sole", "value": "Rubber"},

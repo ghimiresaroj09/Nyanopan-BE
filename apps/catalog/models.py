@@ -50,6 +50,11 @@ def pav_additional_image_path(instance, filename):
     return _image_path("values-additional", filename)
 
 
+def product_feature_image_path(instance, filename):
+    """Upload path: ecommerce/products/<uuid>.<ext>."""
+    return _image_path("products", filename)
+
+
 class Gender(models.TextChoices):
     MEN = "MEN", "Men"
     WOMEN = "WOMEN", "Women"
@@ -137,6 +142,18 @@ class Product(TimeStampedModel, SluggedModelMixin):
     is_featured = models.BooleanField(default=False, db_index=True)
     is_active = models.BooleanField(default=True, db_index=True)
     key_features = models.JSONField(default=list, blank=True)
+    
+    # Featured image for the product (main product image)
+    feature_image = models.ImageField(
+        upload_to=product_feature_image_path,
+        storage=image_storage,
+        validators=[validate_image_upload],
+        blank=True,
+        help_text="Main product image shown in listings and detail views.",
+    )
+    feature_image_title = models.CharField(max_length=255, blank=True, default="")
+    feature_image_caption = models.CharField(max_length=255, blank=True, default="")
+    feature_image_alt = models.CharField(max_length=255, blank=True, default="")
 
     class Meta:
         ordering = ["-created_at"]
@@ -153,6 +170,10 @@ class Product(TimeStampedModel, SluggedModelMixin):
     def clean(self):
         super().clean()
         validate_key_features(self.key_features)
+    
+    @property
+    def has_feature_image(self) -> bool:
+        return bool(self.feature_image.name)
 
 
 class Attribute(TimeStampedModel):
