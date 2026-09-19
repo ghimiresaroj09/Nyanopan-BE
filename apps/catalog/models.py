@@ -63,6 +63,13 @@ class Gender(models.TextChoices):
     BABY = "BABY", "Baby"
 
 
+class UsageLocation(models.TextChoices):
+    """Where the product is intended to be used."""
+    INSIDE = "INSIDE", "Inside"
+    OUTSIDE = "OUTSIDE", "Outside"
+    BOTH = "BOTH", "Both"
+
+
 class ImageMetadataMixin(models.Model):
     """Cloudinary image + presentation metadata for a single image field.
 
@@ -135,6 +142,13 @@ class Product(TimeStampedModel, SluggedModelMixin):
     slug = models.SlugField(max_length=220, unique=True, blank=True)
     model = models.ForeignKey(ProductModel, on_delete=models.PROTECT, related_name="products")
     gender = models.CharField(max_length=10, choices=Gender.choices, db_index=True)
+    usage_location = models.CharField(
+        max_length=10,
+        choices=UsageLocation.choices,
+        default=UsageLocation.BOTH,
+        blank=True,
+        help_text="Where the product is intended to be used (Inside, Outside, or Both).",
+    )
     description = models.TextField(blank=True, default="")
     general_information = models.TextField(blank=True, default="")
     materials_used = models.TextField(blank=True, default="")

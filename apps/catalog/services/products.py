@@ -31,6 +31,7 @@ _PRODUCT_SCALAR_FIELDS = (
     "slug",
     "model",
     "gender",
+    "usage_location",
     "description",
     "general_information",
     "materials_used",

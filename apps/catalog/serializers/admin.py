@@ -507,6 +507,7 @@ class ProductAdminWriteSerializer(serializers.ModelSerializer):
             "slug",
             "model",
             "gender",
+            "usage_location",
             "description",
             "general_information",
             "materials_used",
@@ -578,6 +579,7 @@ class ProductAdminResponseSerializer(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField()
     is_active = serializers.BooleanField()
     is_featured = serializers.BooleanField()
+    usage_location = serializers.CharField()
     materials_used = serializers.CharField()
     general_information = serializers.CharField()
     key_features = serializers.JSONField()
@@ -591,6 +593,7 @@ class ProductAdminResponseSerializer(serializers.ModelSerializer):
             "description",
             "model",
             "gender",
+            "usage_location",
             "attributes",
             "category",
             "feature_image",
