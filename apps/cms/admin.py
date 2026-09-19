@@ -323,3 +323,33 @@ class SubscriptionAdmin(admin.ModelAdmin):
             'classes': ('collapse',),
         }),
     )
+
+
+
+@admin.register(models.ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = ['name', 'email', 'subject', 'status', 'created_at']
+    list_filter = ['status', 'created_at']
+    search_fields = ['name', 'email', 'subject', 'message']
+    readonly_fields = ['name', 'email', 'phone', 'subject', 'message', 'created_at', 'updated_at']
+    ordering = ['-created_at']
+    
+    fieldsets = (
+        ('Contact Info', {
+            'fields': ('name', 'email', 'phone'),
+        }),
+        ('Message', {
+            'fields': ('subject', 'message'),
+        }),
+        ('Status & Notes', {
+            'fields': ('status', 'admin_notes'),
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
+    
+    def has_add_permission(self, request):
+        # Don't allow manual creation (only via API)
+        return False

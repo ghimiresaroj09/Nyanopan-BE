@@ -734,3 +734,60 @@ class Subscription(TimeStampedModel):
     
     def __str__(self):
         return self.email
+
+
+
+# ============================================================================
+# CONTACT US MODEL
+# ============================================================================
+
+class ContactMessage(TimeStampedModel):
+    """Contact form submission model."""
+    
+    class StatusChoices(models.TextChoices):
+        NEW = 'NEW', 'New'
+        IN_PROGRESS = 'IN_PROGRESS', 'In Progress'
+        RESOLVED = 'RESOLVED', 'Resolved'
+        CLOSED = 'CLOSED', 'Closed'
+    
+    name = models.CharField(
+        max_length=255,
+        help_text="Sender's full name"
+    )
+    email = models.EmailField(
+        max_length=255,
+        help_text="Sender's email address"
+    )
+    phone = models.CharField(
+        max_length=50,
+        blank=True,
+        default='',
+        help_text="Sender's phone number (optional)"
+    )
+    subject = models.CharField(
+        max_length=255,
+        help_text="Message subject"
+    )
+    message = models.TextField(
+        help_text="Message content"
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=StatusChoices.choices,
+        default=StatusChoices.NEW,
+        help_text="Message status"
+    )
+    admin_notes = models.TextField(
+        blank=True,
+        default='',
+        help_text="Internal admin notes"
+    )
+    
+    class Meta:
+        verbose_name = "Contact Message"
+        verbose_name_plural = "Contact Messages"
+        db_table = "cms_contact_message"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.name} - {self.subject}"

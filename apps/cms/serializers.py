@@ -813,3 +813,62 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
         
         # Create new subscription
         return Subscription.objects.create(**validated_data)
+
+
+
+# ============================================================================
+# CONTACT US SERIALIZERS
+# ============================================================================
+
+from .models import ContactMessage
+
+
+class ContactMessageCreateSerializer(serializers.ModelSerializer):
+    """Public contact form submission serializer."""
+    
+    class Meta:
+        model = ContactMessage
+        fields = [
+            'name',
+            'email',
+            'phone',
+            'subject',
+            'message',
+        ]
+    
+    def validate_message(self, value):
+        """Ensure message is not too short."""
+        if len(value.strip()) < 10:
+            raise serializers.ValidationError("Message must be at least 10 characters long.")
+        return value
+
+
+class ContactMessageSerializer(serializers.ModelSerializer):
+    """Full contact message serializer for admin."""
+    
+    class Meta:
+        model = ContactMessage
+        fields = [
+            'id',
+            'name',
+            'email',
+            'phone',
+            'subject',
+            'message',
+            'status',
+            'admin_notes',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class ContactMessageUpdateSerializer(serializers.ModelSerializer):
+    """Admin update serializer for status and notes."""
+    
+    class Meta:
+        model = ContactMessage
+        fields = [
+            'status',
+            'admin_notes',
+        ]

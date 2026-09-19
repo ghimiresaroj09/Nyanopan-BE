@@ -5,6 +5,8 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     CollectionAdminViewSet,
+    ContactMessageAdminDetailView,
+    ContactMessageAdminListView,
     HomepageAdminView,
     HomepageCollectionsAdminView,
     OurMakersAdminView,
@@ -31,4 +33,6 @@ urlpatterns = [
     path("homepage/", HomepageAdminView.as_view(), name="homepage-admin"),
     path("homepage/collections/", HomepageCollectionsAdminView.as_view(), name="homepage-collections-admin"),
     path("subscriptions/", SubscriptionAdminListView.as_view(), name="subscriptions-admin"),
+    path("contact-messages/", ContactMessageAdminListView.as_view(), name="contact-messages-admin"),
+    path("contact-messages/<uuid:pk>/", ContactMessageAdminDetailView.as_view(), name="contact-message-detail-admin"),
 ] + router.urls

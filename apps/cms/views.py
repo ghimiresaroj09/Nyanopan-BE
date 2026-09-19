@@ -449,3 +449,86 @@ class SubscriptionAdminListView(SuccessEnvelopeMixin, ListAPIView):
     success_message = "Subscriptions retrieved successfully."
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['is_active']
+
+
+
+# ============================================================================
+# CONTACT US VIEWS
+# ============================================================================
+
+from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
+
+from .models import ContactMessage
+from .serializers import (
+    ContactMessageCreateSerializer,
+    ContactMessageSerializer,
+    ContactMessageUpdateSerializer,
+)
+
+
+@extend_schema(
+    auth=[],
+    tags=["Public - Contact Us"],
+    description="Submit contact form message. No authentication required.",
+    request=ContactMessageCreateSerializer,
+    responses={201: ContactMessageSerializer},
+)
+class ContactUsPublicView(SuccessEnvelopeMixin, CreateAPIView):
+    """Public endpoint to submit contact form."""
+    
+    serializer_class = ContactMessageCreateSerializer
+    permission_classes = []
+    authentication_classes = []
+    
+    def get_success_message(self, request=None):
+        return "Thank you for contacting us. We'll get back to you soon."
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        
+        # Return full message data
+        response_serializer = ContactMessageSerializer(instance)
+        return SuccessEnvelopeMixin.success_response(
+            self,
+            data=response_serializer.data,
+            message=self.get_success_message(request),
+            status_code=status.HTTP_201_CREATED
+        )
+
+
+@extend_schema(
+    tags=["Admin - Contact Messages"],
+    description="List all contact messages. Admin access only.",
+)
+class ContactMessageAdminListView(SuccessEnvelopeMixin, ListAPIView):
+    """Admin endpoint to list all contact messages."""
+    
+    serializer_class = ContactMessageSerializer
+    permission_classes = [IsAdminUser]
+    queryset = ContactMessage.objects.all().order_by('-created_at')
+    success_message = "Contact messages retrieved successfully."
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['status']
+
+
+@extend_schema(
+    tags=["Admin - Contact Messages"],
+    description="View and update contact message status. Admin access only.",
+)
+class ContactMessageAdminDetailView(SuccessEnvelopeMixin, RetrieveUpdateAPIView):
+    """Admin endpoint to view and update contact message."""
+    
+    permission_classes = [IsAdminUser]
+    queryset = ContactMessage.objects.all()
+    
+    def get_success_message(self, request=None):
+        if request and request.method in ['PUT', 'PATCH']:
+            return "Contact message updated successfully."
+        return "Contact message retrieved successfully."
+    
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH']:
+            return ContactMessageUpdateSerializer
+        return ContactMessageSerializer

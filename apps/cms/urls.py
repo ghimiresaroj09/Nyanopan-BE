@@ -4,6 +4,7 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from .views import (
+    ContactUsPublicView,
     HomepageCollectionsPublicView,
     HomepagePublicView,
     OurMakersPublicView,
@@ -27,4 +28,5 @@ urlpatterns = [
     path("homepage/", HomepagePublicView.as_view(), name="homepage-public"),
     path("homepage/collections/", HomepageCollectionsPublicView.as_view(), name="homepage-collections-public"),
     path("subscription/", SubscriptionPublicView.as_view(), name="subscription-public"),
+    path("contact-us/", ContactUsPublicView.as_view(), name="contact-us-public"),
 ] + router.urls
