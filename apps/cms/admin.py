@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 
-from .models import OurMakers, Policy, SiteConfiguration, TeamMember
+from .models import OurMakers, OurStory, Policy, SiteConfiguration, StorySubsection, TeamMember
 
 
 @admin.register(SiteConfiguration)
@@ -120,6 +120,78 @@ class TeamMemberAdmin(admin.ModelAdmin):
         }),
         ('Biography', {
             'fields': ('intro',),
+        }),
+        ('Display Settings', {
+            'fields': ('sort_order', 'is_active'),
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
+    
+    readonly_fields = ['created_at', 'updated_at']
+
+
+
+class StorySubsectionInline(admin.TabularInline):
+    """Inline admin for story subsections."""
+    model = StorySubsection
+    extra = 1
+    fields = ['title', 'image', 'description', 'sort_order', 'is_active']
+    ordering = ['sort_order', 'created_at']
+
+
+@admin.register(OurStory)
+class OurStoryAdmin(admin.ModelAdmin):
+    """Admin interface for Our Story page."""
+    
+    list_display = ['title', 'created_at', 'updated_at']
+    inlines = [StorySubsectionInline]
+    
+    fieldsets = (
+        ('Main Content', {
+            'fields': ('title', 'description'),
+        }),
+        ('Section 1', {
+            'fields': ('section1_title', 'section1_description', 'section1_image'),
+        }),
+        ('Section 2', {
+            'fields': ('section2_title', 'section2_description', 'section2_image'),
+        }),
+        ('Section 3', {
+            'fields': ('section3_title',),
+            'description': 'Subsections are managed below or in the Story Subsections admin.',
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
+    
+    readonly_fields = ['created_at', 'updated_at']
+    
+    def has_add_permission(self, request):
+        """Only allow one instance (singleton)."""
+        return not OurStory.objects.exists()
+    
+    def has_delete_permission(self, request, obj=None):
+        """Prevent deletion of the page."""
+        return False
+
+
+@admin.register(StorySubsection)
+class StorySubsectionAdmin(admin.ModelAdmin):
+    """Admin interface for story subsections."""
+    
+    list_display = ['title', 'sort_order', 'is_active', 'created_at']
+    list_filter = ['is_active', 'created_at']
+    search_fields = ['title', 'description']
+    ordering = ['sort_order', 'created_at']
+    
+    fieldsets = (
+        ('Subsection Content', {
+            'fields': ('our_story', 'title', 'image', 'description'),
         }),
         ('Display Settings', {
             'fields': ('sort_order', 'is_active'),

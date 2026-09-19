@@ -9,14 +9,17 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from apps.common.responses import SuccessEnvelopeMixin
 
-from .models import OurMakers, Policy, SiteConfiguration, TeamMember
+from .models import OurMakers, OurStory, Policy, SiteConfiguration, StorySubsection, TeamMember
 from .serializers import (
     OurMakersPublicSerializer,
     OurMakersSerializer,
+    OurStoryPublicSerializer,
+    OurStorySerializer,
     PolicyPublicSerializer,
     PolicySerializer,
     SiteConfigurationPublicSerializer,
     SiteConfigurationSerializer,
+    StorySubsectionSerializer,
     TeamMemberSerializer,
 )
 
@@ -182,3 +185,63 @@ class TeamMemberAdminViewSet(SuccessEnvelopeMixin, ModelViewSet):
         elif request and request.method == 'DELETE':
             return "Team member deleted successfully."
         return "Team member retrieved successfully."
+
+
+
+@extend_schema(
+    auth=[],
+    tags=["Public - Our Story"],
+    description="Get Our Story page with multiple sections and subsections. No authentication required.",
+)
+class OurStoryPublicView(SuccessEnvelopeMixin, RetrieveAPIView):
+    """Public read-only endpoint for Our Story page."""
+    
+    serializer_class = OurStoryPublicSerializer
+    success_message = "Our Story page retrieved successfully."
+    permission_classes = []
+    authentication_classes = []
+    
+    def get_object(self):
+        return OurStory.get_page()
+
+
+@extend_schema(
+    tags=["Admin - Our Story"],
+    description="Manage Our Story page. Admin access only.",
+)
+class OurStoryAdminView(SuccessEnvelopeMixin, RetrieveUpdateAPIView):
+    """Admin endpoint to view and update Our Story page."""
+    
+    serializer_class = OurStorySerializer
+    permission_classes = [IsAdminUser]
+    
+    def get_success_message(self, request=None):
+        if request and request.method in ['PUT', 'PATCH']:
+            return "Our Story page updated successfully."
+        return "Our Story page retrieved successfully."
+    
+    def get_object(self):
+        return OurStory.get_page()
+
+
+@extend_schema(
+    tags=["Admin - Story Subsections"],
+    description="Manage story subsections for Section 3. Admin access only.",
+)
+class StorySubsectionAdminViewSet(SuccessEnvelopeMixin, ModelViewSet):
+    """Admin endpoint to manage story subsections."""
+    
+    serializer_class = StorySubsectionSerializer
+    permission_classes = [IsAdminUser]
+    queryset = StorySubsection.objects.all().order_by('sort_order', 'created_at')
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['is_active', 'our_story']
+    
+    def get_success_message(self, request=None):
+        if request and request.method == 'POST':
+            return "Subsection created successfully."
+        elif request and request.method in ['PUT', 'PATCH']:
+            return "Subsection updated successfully."
+        elif request and request.method == 'DELETE':
+            return "Subsection deleted successfully."
+        return "Subsection retrieved successfully."

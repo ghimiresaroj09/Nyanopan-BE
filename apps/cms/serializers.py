@@ -203,3 +203,110 @@ class OurMakersPublicSerializer(serializers.ModelSerializer):
         ]
         data['team_members'] = TeamMemberPublicSerializer(active_members, many=True).data
         return data
+
+
+
+from .models import OurStory, StorySubsection
+
+
+class StorySubsectionSerializer(serializers.ModelSerializer):
+    """Story subsection serializer."""
+    
+    class Meta:
+        model = StorySubsection
+        fields = [
+            'id',
+            'title',
+            'image',
+            'description',
+            'sort_order',
+            'is_active',
+        ]
+
+
+class StorySubsectionPublicSerializer(serializers.ModelSerializer):
+    """Public read-only serializer for subsections."""
+    
+    class Meta:
+        model = StorySubsection
+        fields = [
+            'title',
+            'image',
+            'description',
+        ]
+
+
+class Section1Serializer(serializers.Serializer):
+    """Nested serializer for Section 1."""
+    title = serializers.CharField(source='section1_title')
+    description = serializers.CharField(source='section1_description')
+    image = serializers.CharField(source='section1_image')
+
+
+class Section2Serializer(serializers.Serializer):
+    """Nested serializer for Section 2."""
+    title = serializers.CharField(source='section2_title')
+    description = serializers.CharField(source='section2_description')
+    image = serializers.CharField(source='section2_image')
+
+
+class Section3Serializer(serializers.Serializer):
+    """Nested serializer for Section 3 with subsections."""
+    title = serializers.CharField(source='section3_title')
+    subsections = serializers.SerializerMethodField()
+    
+    def get_subsections(self, obj):
+        # For admin, include all subsections
+        subsections = obj.section3_subsections.all().order_by('sort_order', 'created_at')
+        return StorySubsectionSerializer(subsections, many=True).data
+
+
+class Section3PublicSerializer(serializers.Serializer):
+    """Public nested serializer for Section 3 with subsections."""
+    title = serializers.CharField(source='section3_title')
+    subsections = serializers.SerializerMethodField()
+    
+    def get_subsections(self, obj):
+        # For public, only active subsections
+        subsections = obj.section3_subsections.filter(is_active=True).order_by('sort_order', 'created_at')
+        return StorySubsectionPublicSerializer(subsections, many=True).data
+
+
+class OurStorySerializer(serializers.ModelSerializer):
+    """Our Story page serializer with nested sections."""
+    
+    section1 = Section1Serializer(source='*', read_only=True)
+    section2 = Section2Serializer(source='*', read_only=True)
+    section3 = Section3Serializer(source='*', read_only=True)
+    
+    class Meta:
+        model = OurStory
+        fields = [
+            'id',
+            'title',
+            'description',
+            'section1',
+            'section2',
+            'section3',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class OurStoryPublicSerializer(serializers.ModelSerializer):
+    """Public read-only serializer for Our Story page."""
+    
+    section1 = Section1Serializer(source='*', read_only=True)
+    section2 = Section2Serializer(source='*', read_only=True)
+    section3 = Section3PublicSerializer(source='*', read_only=True)
+    
+    class Meta:
+        model = OurStory
+        fields = [
+            'title',
+            'description',
+            'section1',
+            'section2',
+            'section3',
+        ]

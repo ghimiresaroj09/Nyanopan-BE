@@ -234,3 +234,129 @@ class TeamMember(TimeStampedModel):
     
     def __str__(self):
         return f"{self.name} - {self.role}"
+
+
+
+class OurStory(TimeStampedModel):
+    """Our Story page (singleton model).
+    
+    Displays company story with multiple sections.
+    Only one instance should exist.
+    """
+    
+    # Override parent's UUID field with integer PK for singleton pattern
+    id = models.AutoField(primary_key=True)
+    
+    # Main page content
+    title = models.CharField(
+        max_length=255,
+        default="Our Story",
+        help_text="Main page title"
+    )
+    description = models.TextField(
+        blank=True,
+        help_text="Main introduction text"
+    )
+    
+    # Section 1
+    section1_title = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Section 1 title"
+    )
+    section1_description = models.TextField(
+        blank=True,
+        help_text="Section 1 description"
+    )
+    section1_image = models.CharField(
+        max_length=500,
+        blank=True,
+        help_text="Section 1 image (Cloudinary URL or reference)"
+    )
+    
+    # Section 2
+    section2_title = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Section 2 title"
+    )
+    section2_description = models.TextField(
+        blank=True,
+        help_text="Section 2 description"
+    )
+    section2_image = models.CharField(
+        max_length=500,
+        blank=True,
+        help_text="Section 2 image (Cloudinary URL or reference)"
+    )
+    
+    # Section 3 title (subsections stored in StorySubsection model)
+    section3_title = models.CharField(
+        max_length=255,
+        blank=True,
+        default="Our Journey",
+        help_text="Section 3 title (has subsections)"
+    )
+    
+    class Meta:
+        verbose_name = "Our Story"
+        verbose_name_plural = "Our Story"
+        db_table = "cms_our_story"
+    
+    def __str__(self):
+        return self.title
+    
+    def save(self, *args, **kwargs):
+        """Ensure only one instance exists (singleton pattern)."""
+        if not self.pk and OurStory.objects.exists():
+            raise ValidationError(
+                "Only one Our Story instance is allowed. "
+                "Please update the existing page."
+            )
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_page(cls):
+        """Get or create the singleton page instance."""
+        page, created = cls.objects.get_or_create(pk=1)
+        return page
+
+
+class StorySubsection(TimeStampedModel):
+    """Subsections for Section 3 of Our Story page."""
+    
+    our_story = models.ForeignKey(
+        OurStory,
+        on_delete=models.CASCADE,
+        related_name='section3_subsections',
+        help_text="Our Story page this subsection belongs to"
+    )
+    title = models.CharField(
+        max_length=255,
+        help_text="Subsection title"
+    )
+    image = models.CharField(
+        max_length=500,
+        blank=True,
+        help_text="Subsection image (Cloudinary URL or reference)"
+    )
+    description = models.TextField(
+        help_text="Subsection description"
+    )
+    sort_order = models.IntegerField(
+        default=0,
+        help_text="Display order (lower numbers appear first)"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether this subsection is currently displayed"
+    )
+    
+    class Meta:
+        verbose_name = "Story Subsection"
+        verbose_name_plural = "Story Subsections"
+        db_table = "cms_story_subsection"
+        ordering = ['sort_order', 'created_at']
+    
+    def __str__(self):
+        return self.title
