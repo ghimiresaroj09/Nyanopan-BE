@@ -226,6 +226,14 @@ from .models import OurStory, StorySubsection
 class StorySubsectionSerializer(serializers.ModelSerializer):
     """Story subsection serializer."""
     
+    # Override image field to accept URL strings instead of binary files
+    image = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        help_text="Cloudinary image URL"
+    )
+    
     class Meta:
         model = StorySubsection
         fields = [
@@ -384,6 +392,14 @@ from .models import OurSustainability, SustainabilitySection
 
 class SustainabilitySectionSerializer(serializers.ModelSerializer):
     """Sustainability section serializer."""
+    
+    # Override image field to accept URL strings instead of binary files
+    image = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        help_text="Cloudinary image URL"
+    )
     
     class Meta:
         model = SustainabilitySection
