@@ -145,3 +145,92 @@ class Policy(TimeStampedModel):
         if not self.title:
             self.title = self.get_type_display()
         super().save(*args, **kwargs)
+
+
+
+class OurMakers(TimeStampedModel):
+    """Our Makers/Team page (singleton model).
+    
+    Displays team members/makers information on the website.
+    Only one instance should exist.
+    """
+    
+    # Override parent's UUID field with integer PK for singleton pattern
+    id = models.AutoField(primary_key=True)
+    
+    title = models.CharField(
+        max_length=255,
+        default="Our Makers",
+        help_text="Page title (e.g., 'Meet Our Makers', 'Our Team')"
+    )
+    description = models.TextField(
+        blank=True,
+        help_text="Introduction text about the makers/team"
+    )
+    
+    class Meta:
+        verbose_name = "Our Makers"
+        verbose_name_plural = "Our Makers"
+        db_table = "cms_our_makers"
+    
+    def __str__(self):
+        return self.title
+    
+    def save(self, *args, **kwargs):
+        """Ensure only one instance exists (singleton pattern)."""
+        if not self.pk and OurMakers.objects.exists():
+            raise ValidationError(
+                "Only one Our Makers instance is allowed. "
+                "Please update the existing page."
+            )
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_page(cls):
+        """Get or create the singleton page instance."""
+        page, created = cls.objects.get_or_create(pk=1)
+        return page
+
+
+class TeamMember(TimeStampedModel):
+    """Individual team member/maker information."""
+    
+    our_makers = models.ForeignKey(
+        OurMakers,
+        on_delete=models.CASCADE,
+        related_name='team_members',
+        help_text="Our Makers page this member belongs to"
+    )
+    name = models.CharField(
+        max_length=255,
+        help_text="Team member's full name"
+    )
+    image = models.CharField(
+        max_length=500,
+        blank=True,
+        help_text="Cloudinary image URL or reference name"
+    )
+    role = models.CharField(
+        max_length=255,
+        help_text="Job title or role (e.g., 'Master Craftsman', 'Designer')"
+    )
+    intro = models.TextField(
+        help_text="Brief introduction or bio"
+    )
+    sort_order = models.IntegerField(
+        default=0,
+        help_text="Display order (lower numbers appear first)"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether this member is currently displayed"
+    )
+    
+    class Meta:
+        verbose_name = "Team Member"
+        verbose_name_plural = "Team Members"
+        db_table = "cms_team_member"
+        ordering = ['sort_order', 'name']
+    
+    def __str__(self):
+        return f"{self.name} - {self.role}"

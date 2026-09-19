@@ -9,12 +9,15 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from apps.common.responses import SuccessEnvelopeMixin
 
-from .models import Policy, SiteConfiguration
+from .models import OurMakers, Policy, SiteConfiguration, TeamMember
 from .serializers import (
+    OurMakersPublicSerializer,
+    OurMakersSerializer,
     PolicyPublicSerializer,
     PolicySerializer,
     SiteConfigurationPublicSerializer,
     SiteConfigurationSerializer,
+    TeamMemberSerializer,
 )
 
 
@@ -119,3 +122,63 @@ class PolicyAdminViewSet(SuccessEnvelopeMixin, ModelViewSet):
         elif request and request.method == 'DELETE':
             return "Policy deleted successfully."
         return "Policy retrieved successfully."
+
+
+
+@extend_schema(
+    auth=[],
+    tags=["Public - Our Makers"],
+    description="Get Our Makers/Team page with team member information. No authentication required.",
+)
+class OurMakersPublicView(SuccessEnvelopeMixin, RetrieveAPIView):
+    """Public read-only endpoint for Our Makers page."""
+    
+    serializer_class = OurMakersPublicSerializer
+    success_message = "Our Makers page retrieved successfully."
+    permission_classes = []
+    authentication_classes = []
+    
+    def get_object(self):
+        return OurMakers.get_page()
+
+
+@extend_schema(
+    tags=["Admin - Our Makers"],
+    description="Manage Our Makers page and team members. Admin access only.",
+)
+class OurMakersAdminView(SuccessEnvelopeMixin, RetrieveUpdateAPIView):
+    """Admin endpoint to view and update Our Makers page."""
+    
+    serializer_class = OurMakersSerializer
+    permission_classes = [IsAdminUser]
+    
+    def get_success_message(self, request=None):
+        if request and request.method in ['PUT', 'PATCH']:
+            return "Our Makers page updated successfully."
+        return "Our Makers page retrieved successfully."
+    
+    def get_object(self):
+        return OurMakers.get_page()
+
+
+@extend_schema(
+    tags=["Admin - Team Members"],
+    description="Manage team members. Admin access only.",
+)
+class TeamMemberAdminViewSet(SuccessEnvelopeMixin, ModelViewSet):
+    """Admin endpoint to manage team members."""
+    
+    serializer_class = TeamMemberSerializer
+    permission_classes = [IsAdminUser]
+    queryset = TeamMember.objects.all().order_by('sort_order', 'name')
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['is_active', 'our_makers']
+    
+    def get_success_message(self, request=None):
+        if request and request.method == 'POST':
+            return "Team member created successfully."
+        elif request and request.method in ['PUT', 'PATCH']:
+            return "Team member updated successfully."
+        elif request and request.method == 'DELETE':
+            return "Team member deleted successfully."
+        return "Team member retrieved successfully."

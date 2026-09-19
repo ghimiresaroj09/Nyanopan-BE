@@ -128,3 +128,78 @@ class PolicyPublicSerializer(serializers.ModelSerializer):
             'title',
             'content',
         ]
+
+
+
+from .models import OurMakers, TeamMember
+
+
+class TeamMemberSerializer(serializers.ModelSerializer):
+    """Team member serializer."""
+    
+    class Meta:
+        model = TeamMember
+        fields = [
+            'id',
+            'name',
+            'image',
+            'role',
+            'intro',
+            'sort_order',
+            'is_active',
+        ]
+
+
+class TeamMemberPublicSerializer(serializers.ModelSerializer):
+    """Public read-only serializer for team members."""
+    
+    class Meta:
+        model = TeamMember
+        fields = [
+            'name',
+            'image',
+            'role',
+            'intro',
+        ]
+
+
+class OurMakersSerializer(serializers.ModelSerializer):
+    """Our Makers page serializer with nested team members."""
+    
+    team_members = TeamMemberSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = OurMakers
+        fields = [
+            'id',
+            'title',
+            'description',
+            'team_members',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class OurMakersPublicSerializer(serializers.ModelSerializer):
+    """Public read-only serializer for Our Makers page."""
+    
+    team_members = TeamMemberPublicSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = OurMakers
+        fields = [
+            'title',
+            'description',
+            'team_members',
+        ]
+    
+    def to_representation(self, instance):
+        """Only include active team members in public response."""
+        data = super().to_representation(instance)
+        # Filter to only active members
+        active_members = [
+            member for member in instance.team_members.filter(is_active=True).order_by('sort_order', 'name')
+        ]
+        data['team_members'] = TeamMemberPublicSerializer(active_members, many=True).data
+        return data
