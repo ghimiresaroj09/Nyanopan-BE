@@ -271,3 +271,123 @@ class OurSustainabilityAdminView(SuccessEnvelopeMixin, RetrieveUpdateAPIView):
     
     def get_object(self):
         return OurSustainability.get_page()
+
+
+
+# ============================================================================
+# HOMEPAGE VIEWS
+# ============================================================================
+
+from .models import Homepage, HomepageCollections, Collection
+from .serializers import (
+    HomepageSerializer,
+    HomepagePublicSerializer,
+    HomepageCollectionsSerializer,
+    HomepageCollectionsPublicSerializer,
+    CollectionSerializer,
+)
+
+
+@extend_schema(
+    auth=[],
+    tags=["Public - Homepage"],
+    description="Get homepage content. No authentication required.",
+)
+class HomepagePublicView(SuccessEnvelopeMixin, RetrieveAPIView):
+    """Public read-only endpoint for Homepage content."""
+    
+    serializer_class = HomepagePublicSerializer
+    success_message = "Homepage content retrieved successfully."
+    permission_classes = []
+    authentication_classes = []
+    
+    def get_object(self):
+        return Homepage.get_homepage()
+
+
+@extend_schema(
+    tags=["Admin - Homepage"],
+    description="Manage homepage content. Admin access only.",
+)
+class HomepageAdminView(SuccessEnvelopeMixin, RetrieveUpdateAPIView):
+    """Admin endpoint to view and update Homepage content."""
+    
+    serializer_class = HomepageSerializer
+    permission_classes = [IsAdminUser]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
+    
+    def get_success_message(self, request=None):
+        if request and request.method in ['PUT', 'PATCH']:
+            return "Homepage content updated successfully."
+        return "Homepage content retrieved successfully."
+    
+    def get_object(self):
+        return Homepage.get_homepage()
+
+
+@extend_schema(
+    auth=[],
+    tags=["Public - Homepage Collections"],
+    description="Get homepage collections. No authentication required.",
+)
+class HomepageCollectionsPublicView(SuccessEnvelopeMixin, RetrieveAPIView):
+    """Public read-only endpoint for Homepage Collections."""
+    
+    serializer_class = HomepageCollectionsPublicSerializer
+    success_message = "Homepage collections retrieved successfully."
+    permission_classes = []
+    authentication_classes = []
+    
+    def get_object(self):
+        return HomepageCollections.get_collections_page()
+
+
+@extend_schema(
+    tags=["Admin - Homepage Collections"],
+    description="Manage homepage collections. Admin access only.",
+)
+class HomepageCollectionsAdminView(SuccessEnvelopeMixin, RetrieveUpdateAPIView):
+    """Admin endpoint to view and update Homepage Collections."""
+    
+    serializer_class = HomepageCollectionsSerializer
+    permission_classes = [IsAdminUser]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
+    
+    def get_success_message(self, request=None):
+        if request and request.method in ['PUT', 'PATCH']:
+            return "Homepage collections updated successfully."
+        return "Homepage collections retrieved successfully."
+    
+    def get_object(self):
+        return HomepageCollections.get_collections_page()
+
+
+@extend_schema(
+    tags=["Admin - Collections"],
+    description="Manage individual collection items. Admin access only.",
+)
+class CollectionAdminViewSet(SuccessEnvelopeMixin, ModelViewSet):
+    """Admin endpoint to manage collection items."""
+    
+    serializer_class = CollectionSerializer
+    permission_classes = [IsAdminUser]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
+    queryset = Collection.objects.all().order_by('sort_order', 'name')
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['is_active', 'homepage_collections']
+    
+    def get_success_message(self, request=None):
+        if request and request.method == 'POST':
+            return "Collection created successfully."
+        elif request and request.method in ['PUT', 'PATCH']:
+            return "Collection updated successfully."
+        elif request and request.method == 'DELETE':
+            return "Collection deleted successfully."
+        return "Collection retrieved successfully."
+    
+    def perform_create(self, serializer):
+        # Auto-assign to singleton homepage collections if not provided
+        if 'homepage_collections' not in serializer.validated_data:
+            serializer.save(homepage_collections=HomepageCollections.get_collections_page())
+        else:
+            serializer.save()

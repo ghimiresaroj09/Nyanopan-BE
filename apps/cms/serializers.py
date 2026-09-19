@@ -528,3 +528,236 @@ class OurSustainabilityPublicSerializer(serializers.ModelSerializer):
         """Only include active sections in public response."""
         active_sections = obj.sections.filter(is_active=True).order_by('sort_order', 'created_at')
         return SustainabilitySectionPublicSerializer(active_sections, many=True).data
+
+
+
+# ============================================================================
+# HOMEPAGE SERIALIZERS
+# ============================================================================
+
+from .models import Homepage, HomepageCollections, Collection
+
+
+class Section1Serializer(serializers.Serializer):
+    """Nested serializer for Homepage Section 1."""
+    tag = serializers.CharField(source='section1_tag', required=False, allow_blank=True)
+    image = serializers.CharField(source='section1_image', required=False, allow_blank=True)
+    title = serializers.CharField(source='section1_title', required=False, allow_blank=True)
+    description = serializers.CharField(source='section1_description', required=False, allow_blank=True)
+    quote = serializers.CharField(source='section1_quote', required=False, allow_blank=True)
+
+
+class FeatureSerializer(serializers.Serializer):
+    """Serializer for section 2 features."""
+    title = serializers.CharField()
+    intro = serializers.CharField()
+
+
+class Section2Serializer(serializers.Serializer):
+    """Nested serializer for Homepage Section 2."""
+    tag = serializers.CharField(source='section2_tag', required=False, allow_blank=True)
+    title = serializers.CharField(source='section2_title', required=False, allow_blank=True)
+    description = serializers.CharField(source='section2_description', required=False, allow_blank=True)
+    image = serializers.CharField(source='section2_image', required=False, allow_blank=True)
+    feature = FeatureSerializer(source='section2_features', many=True, required=False)
+
+
+class Section3Serializer(serializers.Serializer):
+    """Nested serializer for Homepage Section 3."""
+    tag = serializers.CharField(source='section3_tag', required=False, allow_blank=True)
+    title = serializers.CharField(source='section3_title', required=False, allow_blank=True)
+    image = serializers.CharField(source='section3_image', required=False, allow_blank=True)
+    description = serializers.CharField(source='section3_description', required=False, allow_blank=True)
+
+
+class HomepageSerializer(serializers.ModelSerializer):
+    """Homepage serializer with nested sections."""
+    
+    section1 = Section1Serializer(source='*', required=False)
+    section2 = Section2Serializer(source='*', required=False)
+    section3 = Section3Serializer(source='*', required=False)
+    
+    class Meta:
+        model = Homepage
+        fields = [
+            'id',
+            'section1',
+            'section2',
+            'section3',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def update(self, instance, validated_data):
+        """Handle nested sections update."""
+        # Update section 1 fields
+        instance.section1_tag = validated_data.get('section1_tag', instance.section1_tag)
+        instance.section1_image = validated_data.get('section1_image', instance.section1_image)
+        instance.section1_title = validated_data.get('section1_title', instance.section1_title)
+        instance.section1_description = validated_data.get('section1_description', instance.section1_description)
+        instance.section1_quote = validated_data.get('section1_quote', instance.section1_quote)
+        
+        # Update section 2 fields
+        instance.section2_tag = validated_data.get('section2_tag', instance.section2_tag)
+        instance.section2_title = validated_data.get('section2_title', instance.section2_title)
+        instance.section2_description = validated_data.get('section2_description', instance.section2_description)
+        instance.section2_image = validated_data.get('section2_image', instance.section2_image)
+        
+        # Handle section2_features (array of feature objects)
+        section2_features = validated_data.get('section2_features')
+        if section2_features is not None:
+            instance.section2_features = section2_features
+        
+        # Update section 3 fields
+        instance.section3_tag = validated_data.get('section3_tag', instance.section3_tag)
+        instance.section3_title = validated_data.get('section3_title', instance.section3_title)
+        instance.section3_image = validated_data.get('section3_image', instance.section3_image)
+        instance.section3_description = validated_data.get('section3_description', instance.section3_description)
+        
+        instance.save()
+        return instance
+
+
+class HomepagePublicSerializer(serializers.ModelSerializer):
+    """Public read-only serializer for Homepage."""
+    
+    section1 = Section1Serializer(source='*', read_only=True)
+    section2 = Section2Serializer(source='*', read_only=True)
+    section3 = Section3Serializer(source='*', read_only=True)
+    
+    class Meta:
+        model = Homepage
+        fields = [
+            'section1',
+            'section2',
+            'section3',
+        ]
+
+
+class CollectionSerializer(serializers.ModelSerializer):
+    """Collection serializer."""
+    
+    # Override image field to accept URL strings
+    image = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        help_text="Collection image URL (Cloudinary)"
+    )
+    
+    class Meta:
+        model = Collection
+        fields = [
+            'id',
+            'image',
+            'name',
+            'intro',
+            'link',
+            'sort_order',
+            'is_active',
+        ]
+        read_only_fields = ['id']
+
+
+class CollectionPublicSerializer(serializers.ModelSerializer):
+    """Public read-only serializer for collections."""
+    
+    class Meta:
+        model = Collection
+        fields = [
+            'image',
+            'name',
+            'intro',
+            'link',
+        ]
+
+
+class HomepageCollectionsSerializer(serializers.ModelSerializer):
+    """Homepage Collections serializer with nested collections."""
+    
+    collections = CollectionSerializer(many=True, read_only=False, required=False)
+    
+    class Meta:
+        model = HomepageCollections
+        fields = [
+            'id',
+            'tag',
+            'title',
+            'description',
+            'collections',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def update(self, instance, validated_data):
+        """Handle nested collections update."""
+        # Update simple fields
+        instance.tag = validated_data.get('tag', instance.tag)
+        instance.title = validated_data.get('title', instance.title)
+        instance.description = validated_data.get('description', instance.description)
+        
+        # Handle collections if provided
+        collections_data = validated_data.get('collections')
+        if collections_data is not None:
+            # If no collections have IDs, replace all (delete old, create new)
+            has_any_ids = any('id' in item for item in collections_data)
+            
+            if not has_any_ids:
+                # Replace mode: delete all existing and create new ones
+                instance.collections.all().delete()
+                for collection_data in collections_data:
+                    # Clean up empty image strings
+                    if 'image' in collection_data and collection_data['image'] == '':
+                        collection_data['image'] = ''
+                    Collection.objects.create(
+                        homepage_collections=instance,
+                        **collection_data
+                    )
+            else:
+                # Update/Create mode: match by ID
+                existing_ids = set()
+                for collection_data in collections_data:
+                    collection_id = collection_data.get('id')
+                    
+                    # Clean up empty image strings
+                    if 'image' in collection_data and collection_data['image'] == '':
+                        collection_data['image'] = ''
+                    
+                    if collection_id:
+                        # Update existing
+                        Collection.objects.filter(id=collection_id, homepage_collections=instance).update(**{
+                            k: v for k, v in collection_data.items() if k != 'id'
+                        })
+                        existing_ids.add(collection_id)
+                    else:
+                        # Create new
+                        new_collection = Collection.objects.create(
+                            homepage_collections=instance,
+                            **collection_data
+                        )
+                        existing_ids.add(new_collection.id)
+        
+        instance.save()
+        return instance
+
+
+class HomepageCollectionsPublicSerializer(serializers.ModelSerializer):
+    """Public read-only serializer for Homepage Collections."""
+    
+    collections = serializers.SerializerMethodField()
+    
+    def get_collections(self, obj):
+        # For public, only active collections
+        collections = obj.collections.filter(is_active=True).order_by('sort_order', 'name')
+        return CollectionPublicSerializer(collections, many=True).data
+    
+    class Meta:
+        model = HomepageCollections
+        fields = [
+            'tag',
+            'title',
+            'description',
+            'collections',
+        ]

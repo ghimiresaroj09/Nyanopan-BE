@@ -2,19 +2,10 @@
 
 from django.contrib import admin
 
-from .models import (
-    OurMakers,
-    OurStory,
-    OurSustainability,
-    Policy,
-    SiteConfiguration,
-    StorySubsection,
-    SustainabilitySection,
-    TeamMember,
-)
+from . import models
 
 
-@admin.register(SiteConfiguration)
+@admin.register(models.SiteConfiguration)
 class SiteConfigurationAdmin(admin.ModelAdmin):
     """Admin interface for site configuration."""
     
@@ -51,7 +42,7 @@ class SiteConfigurationAdmin(admin.ModelAdmin):
 
 
 
-@admin.register(Policy)
+@admin.register(models.Policy)
 class PolicyAdmin(admin.ModelAdmin):
     """Admin interface for policies."""
     
@@ -80,13 +71,13 @@ class PolicyAdmin(admin.ModelAdmin):
 
 class TeamMemberInline(admin.TabularInline):
     """Inline admin for team members."""
-    model = TeamMember
+    model = models.TeamMember
     extra = 1
     fields = ['name', 'role', 'image', 'intro', 'sort_order', 'is_active']
     ordering = ['sort_order', 'name']
 
 
-@admin.register(OurMakers)
+@admin.register(models.OurMakers)
 class OurMakersAdmin(admin.ModelAdmin):
     """Admin interface for Our Makers page."""
     
@@ -114,7 +105,7 @@ class OurMakersAdmin(admin.ModelAdmin):
         return False
 
 
-@admin.register(TeamMember)
+@admin.register(models.TeamMember)
 class TeamMemberAdmin(admin.ModelAdmin):
     """Admin interface for team members."""
     
@@ -145,13 +136,13 @@ class TeamMemberAdmin(admin.ModelAdmin):
 
 class StorySubsectionInline(admin.TabularInline):
     """Inline admin for story subsections."""
-    model = StorySubsection
+    model = models.StorySubsection
     extra = 1
     fields = ['title', 'image', 'description', 'sort_order', 'is_active']
     ordering = ['sort_order', 'created_at']
 
 
-@admin.register(OurStory)
+@admin.register(models.OurStory)
 class OurStoryAdmin(admin.ModelAdmin):
     """Admin interface for Our Story page."""
     
@@ -189,7 +180,7 @@ class OurStoryAdmin(admin.ModelAdmin):
         return False
 
 
-@admin.register(StorySubsection)
+@admin.register(models.StorySubsection)
 class StorySubsectionAdmin(admin.ModelAdmin):
     """Admin interface for story subsections."""
     
@@ -217,13 +208,13 @@ class StorySubsectionAdmin(admin.ModelAdmin):
 
 class SustainabilitySectionInline(admin.TabularInline):
     """Inline admin for sustainability sections."""
-    model = SustainabilitySection
+    model = models.SustainabilitySection
     extra = 1
     fields = ['title', 'description', 'image', 'sort_order', 'is_active']
     ordering = ['sort_order', 'created_at']
 
 
-@admin.register(OurSustainability)
+@admin.register(models.OurSustainability)
 class OurSustainabilityAdmin(admin.ModelAdmin):
     """Admin interface for Our Sustainability page."""
     
@@ -251,7 +242,7 @@ class OurSustainabilityAdmin(admin.ModelAdmin):
         return False
 
 
-@admin.register(SustainabilitySection)
+@admin.register(models.SustainabilitySection)
 class SustainabilitySectionAdmin(admin.ModelAdmin):
     """Admin interface for sustainability sections."""
     
@@ -274,3 +265,41 @@ class SustainabilitySectionAdmin(admin.ModelAdmin):
     )
     
     readonly_fields = ['created_at', 'updated_at']
+
+
+
+# Homepage models
+@admin.register(models.Homepage)
+class HomepageAdmin(admin.ModelAdmin):
+    list_display = ['id', 'created_at', 'updated_at']
+    readonly_fields = ['id', 'created_at', 'updated_at']
+    
+    def has_add_permission(self, request):
+        # Only allow one instance
+        return not models.Homepage.objects.exists()
+    
+    def has_delete_permission(self, request, obj=None):
+        # Don't allow deletion of singleton
+        return False
+
+
+@admin.register(models.HomepageCollections)
+class HomepageCollectionsAdmin(admin.ModelAdmin):
+    list_display = ['id', 'title', 'tag', 'created_at']
+    readonly_fields = ['id', 'created_at', 'updated_at']
+    
+    def has_add_permission(self, request):
+        # Only allow one instance
+        return not models.HomepageCollections.objects.exists()
+    
+    def has_delete_permission(self, request, obj=None):
+        # Don't allow deletion of singleton
+        return False
+
+
+@admin.register(models.Collection)
+class CollectionAdmin(admin.ModelAdmin):
+    list_display = ['name', 'link', 'sort_order', 'is_active', 'created_at']
+    list_filter = ['is_active', 'created_at']
+    search_fields = ['name', 'intro', 'link']
+    ordering = ['sort_order', 'name']

@@ -482,3 +482,223 @@ class SustainabilitySection(TimeStampedModel):
     
     def __str__(self):
         return self.title
+
+
+
+# ============================================================================
+# HOMEPAGE MODELS
+# ============================================================================
+
+class Homepage(TimeStampedModel):
+    """Homepage content (singleton model).
+    
+    Contains three main sections for homepage display.
+    Only one instance should exist.
+    """
+    
+    # Override parent's UUID field with integer PK for singleton pattern
+    id = models.AutoField(primary_key=True)
+    
+    # Section 1
+    section1_tag = models.CharField(
+        max_length=100,
+        blank=True,
+        default='',
+        help_text="Section 1 tag/label"
+    )
+    section1_image = models.CharField(
+        max_length=500,
+        blank=True,
+        default='',
+        help_text="Section 1 image URL (Cloudinary)"
+    )
+    section1_title = models.CharField(
+        max_length=255,
+        blank=True,
+        default='',
+        help_text="Section 1 title"
+    )
+    section1_description = models.TextField(
+        blank=True,
+        default='',
+        help_text="Section 1 description"
+    )
+    section1_quote = models.TextField(
+        blank=True,
+        default='',
+        help_text="Section 1 quote"
+    )
+    
+    # Section 2
+    section2_tag = models.CharField(
+        max_length=100,
+        blank=True,
+        default='',
+        help_text="Section 2 tag/label"
+    )
+    section2_title = models.CharField(
+        max_length=255,
+        blank=True,
+        default='',
+        help_text="Section 2 title"
+    )
+    section2_description = models.TextField(
+        blank=True,
+        default='',
+        help_text="Section 2 description"
+    )
+    section2_image = models.CharField(
+        max_length=500,
+        blank=True,
+        default='',
+        help_text="Section 2 image URL (Cloudinary)"
+    )
+    section2_features = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Array of feature objects with title and intro"
+    )
+    
+    # Section 3
+    section3_tag = models.CharField(
+        max_length=100,
+        blank=True,
+        default='',
+        help_text="Section 3 tag/label"
+    )
+    section3_title = models.CharField(
+        max_length=255,
+        blank=True,
+        default='',
+        help_text="Section 3 title"
+    )
+    section3_image = models.CharField(
+        max_length=500,
+        blank=True,
+        default='',
+        help_text="Section 3 image URL (Cloudinary)"
+    )
+    section3_description = models.TextField(
+        blank=True,
+        default='',
+        help_text="Section 3 description"
+    )
+    
+    class Meta:
+        verbose_name = "Homepage"
+        verbose_name_plural = "Homepage"
+        db_table = "cms_homepage"
+    
+    def __str__(self):
+        return "Homepage Content"
+    
+    def save(self, *args, **kwargs):
+        """Ensure only one instance exists (singleton pattern)."""
+        if not self.pk and Homepage.objects.exists():
+            raise ValidationError(
+                "Only one Homepage instance is allowed. "
+                "Please update the existing homepage."
+            )
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_homepage(cls):
+        """Get or create the singleton homepage instance."""
+        homepage, created = cls.objects.get_or_create(pk=1)
+        return homepage
+
+
+class HomepageCollections(TimeStampedModel):
+    """Homepage Collections section (singleton model).
+    
+    Contains collections showcase for homepage.
+    Only one instance should exist.
+    """
+    
+    # Override parent's UUID field with integer PK for singleton pattern
+    id = models.AutoField(primary_key=True)
+    
+    tag = models.CharField(
+        max_length=100,
+        blank=True,
+        default='',
+        help_text="Collections section tag/label"
+    )
+    title = models.CharField(
+        max_length=255,
+        default="Our Collections",
+        help_text="Collections section title"
+    )
+    description = models.TextField(
+        blank=True,
+        default='',
+        help_text="Collections section description"
+    )
+    
+    class Meta:
+        verbose_name = "Homepage Collections"
+        verbose_name_plural = "Homepage Collections"
+        db_table = "cms_homepage_collections"
+    
+    def __str__(self):
+        return "Homepage Collections"
+    
+    def save(self, *args, **kwargs):
+        """Ensure only one instance exists (singleton pattern)."""
+        if not self.pk and HomepageCollections.objects.exists():
+            raise ValidationError(
+                "Only one Homepage Collections instance is allowed. "
+                "Please update the existing instance."
+            )
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_collections_page(cls):
+        """Get or create the singleton collections instance."""
+        page, created = cls.objects.get_or_create(pk=1)
+        return page
+
+
+class Collection(TimeStampedModel):
+    """Individual collection item for homepage."""
+    
+    homepage_collections = models.ForeignKey(
+        HomepageCollections,
+        on_delete=models.CASCADE,
+        related_name='collections',
+        help_text="Homepage Collections page this item belongs to"
+    )
+    image = models.CharField(
+        max_length=500,
+        blank=True,
+        default='',
+        help_text="Collection image URL (Cloudinary)"
+    )
+    name = models.CharField(
+        max_length=255,
+        help_text="Collection name"
+    )
+    intro = models.TextField(
+        help_text="Collection introduction/description"
+    )
+    link = models.CharField(
+        max_length=255,
+        help_text="Internal link path (e.g., /inside, /outdoor)"
+    )
+    sort_order = models.IntegerField(
+        default=0,
+        help_text="Display order (lower numbers appear first)"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether this collection is currently displayed"
+    )
+    
+    class Meta:
+        verbose_name = "Collection"
+        verbose_name_plural = "Collections"
+        db_table = "cms_collection"
+        ordering = ['sort_order', 'name']
+    
+    def __str__(self):
+        return self.name
