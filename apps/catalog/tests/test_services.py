@@ -249,6 +249,26 @@ class TestVariantService:
 
 
 class TestImageCleanup:
+    def test_replaced_product_feature_image_deleted_after_commit(self, product, monkeypatch):
+        ProductService.update_product(
+            product=product,
+            data={"feature_image": {"name": "shop/old-product"}},
+        )
+        deleted = []
+        monkeypatch.setattr(
+            ImageService,
+            "delete_image",
+            staticmethod(lambda public_id: deleted.append(public_id) or True),
+        )
+
+        with captureOnCommitCallbacks(execute=True):
+            ProductService.update_product(
+                product=product,
+                data={"feature_image": {"name": "shop/new-product"}},
+            )
+
+        assert deleted == ["shop/old-product"]
+
     def test_replaced_feature_image_deleted_after_commit(
         self, product, color_attr, grey, monkeypatch
     ):

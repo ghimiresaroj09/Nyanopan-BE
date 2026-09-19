@@ -300,8 +300,9 @@ class ProductService:
             )
             ImageService.apply_metadata(product, "feature_image", data["feature_image"])
             # Clean up old image if replaced
-            if old_feature_name:
-                ImageService.schedule_cleanup([old_feature_name])
+            ImageService.schedule_replaced_cleanup(
+                old_feature_name, product.feature_image.name or ""
+            )
         
         try:
             product.full_clean()
