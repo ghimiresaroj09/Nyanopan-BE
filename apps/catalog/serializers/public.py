@@ -211,12 +211,20 @@ class ProductListSerializer(serializers.ModelSerializer):
 
 
 class ProductDetailSerializer(serializers.ModelSerializer):
-    """Complete product page payload: attributes, images, and variants."""
+    """Complete product page payload: attributes, images, and variants with nested structure."""
 
-    category = CategoryNestedSerializer(read_only=True)
-    model = ProductModelNestedSerializer(read_only=True)
+    category = serializers.SerializerMethodField()
+    model = serializers.SerializerMethodField()
+    feature_image = serializers.SerializerMethodField()
+    product_images = serializers.SerializerMethodField()
     attributes = serializers.SerializerMethodField()
-    variants = serializers.SerializerMethodField()
+    product_varient_values = serializers.SerializerMethodField()
+    rating = serializers.SerializerMethodField()
+    is_active = serializers.BooleanField(source="is_active")
+    is_featured = serializers.BooleanField(source="is_featured")
+    materials_used = serializers.CharField(source="materials_used")
+    general_information = serializers.CharField(source="general_information")
+    key_features = serializers.JSONField(source="key_features")
 
     class Meta:
         model = Product
@@ -224,16 +232,56 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "slug",
-            "gender",
             "description",
-            "general_information",
-            "materials_used",
-            "category",
             "model",
-            "key_features",
+            "gender",
             "attributes",
-            "variants",
+            "category",
+            "feature_image",
+            "product_images",
+            "materials_used",
+            "general_information",
+            "key_features",
+            "is_active",
+            "is_featured",
+            "rating",
+            "product_varient_values",
         ]
+
+    def get_model(self, obj):
+        return {
+            "object": "productmodel",
+            "id": str(obj.model.slug) if obj.model else None,
+            "name": obj.model.name if obj.model else None,
+        }
+
+    def get_category(self, obj):
+        return {
+            "object": "category",
+            "id": str(obj.category.slug) if obj.category else None,
+            "name": obj.category.name if obj.category else None,
+            "slug": obj.category.slug if obj.category else None,
+        }
+
+    def get_feature_image(self, obj):
+        if not obj.feature_image.name:
+            return None
+        return {
+            "url": _absolute_media_url(self.context, obj.feature_image.url),
+            "title": obj.feature_image_title or "",
+            "alt": obj.feature_image_alt or "",
+        }
+
+    def get_product_images(self, obj):
+        # Placeholder for general product images (not attribute-specific)
+        return []
+
+    def get_rating(self, obj):
+        return {
+            "average": 0,
+            "total": 0,
+            "descriptions": [],
+        }
 
     def _prefetched_pavs(self, obj):
         pavs = getattr(obj, "prefetched_pavs", None)
@@ -245,7 +293,8 @@ class ProductDetailSerializer(serializers.ModelSerializer):
                     attribute_value__is_active=True,
                 )
                 .select_related("attribute", "attribute_value")
-                .order_by("id")
+                .prefetch_related("additional_images")
+                .order_by("attribute__name", "attribute_value__name")
             )
         return list(pavs)
 
@@ -262,57 +311,99 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(ATTRIBUTES_SCHEMA)
     def get_attributes(self, obj):
+        """Group PAVs by attribute with full nested structure."""
         groups: dict[int, dict] = {}
+        
         for pav in self._prefetched_pavs(obj):
-            group = groups.setdefault(
-                pav.attribute_id,
-                {"id": pav.attribute_id, "attribute": pav.attribute.name, "values": []},
-            )
+            if pav.attribute_id not in groups:
+                groups[pav.attribute_id] = {
+                    "attribute": {
+                        "object": "attribute",
+                        "id": str(pav.attribute.id),
+                        "name": pav.attribute.name,
+                        "isActive": pav.attribute.is_active,
+                    },
+                    "attributeValues": [],
+                }
+            
+            # Build feature image
             feature_image = None
             if pav.feature_image.name:
                 feature_image = {
                     "url": _absolute_media_url(self.context, pav.feature_image.url),
                     "title": pav.feature_image_title or "",
-                    "caption": pav.feature_image_caption or "",
                     "alt": pav.feature_image_alt or "",
                 }
-            group["values"].append(
-                {
-                    "id": pav.id,
-                    "name": pav.attribute_value.name,
-                    "feature_image": feature_image,
-                    "additional_images": [
-                        {
-                            "url": _absolute_media_url(self.context, image.image.url),
-                            "title": image.title or "",
-                            "caption": image.caption or "",
-                            "alt": image.alt or "",
-                        }
-                        for image in pav.additional_images.all()
-                        if image.image.name
-                    ],
-                }
-            )
+            
+            # Build additional images
+            additional_images = []
+            for image in pav.additional_images.all():
+                if image.image.name:
+                    additional_images.append({
+                        "url": _absolute_media_url(self.context, image.image.url),
+                        "title": image.title or "",
+                        "caption": image.caption or "",
+                        "alt": image.alt or "",
+                        "sortOrder": image.sort_order,
+                    })
+            
+            # Build attribute value item
+            value_item = {
+                "object": "attributevalueitem",
+                "id": str(pav.id),
+                "name": pav.attribute_value.name,
+            }
+            
+            if feature_image:
+                value_item["featureImage"] = feature_image
+            
+            if additional_images:
+                value_item["additionalImages"] = additional_images
+            
+            groups[pav.attribute_id]["attributeValues"].append(value_item)
+        
         return list(groups.values())
 
     @extend_schema_field(VARIANTS_SCHEMA)
-    def get_variants(self, obj):
+    def get_product_varient_values(self, obj):
+        """Return variants with nested attribute structure."""
         payload = []
+        
         for variant in self._prefetched_variants(obj):
-            payload.append(
-                {
-                    "id": variant.id,
-                    "sku": variant.sku,
-                    "price": format_price(variant.price),
-                    "is_special_edition": variant.is_special_edition,
-                    "options": [
-                        {
-                            "product_attribute_value": option.product_attribute_value_id,
-                            "attribute": option.product_attribute_value.attribute.name,
-                            "value": option.product_attribute_value.attribute_value.name,
-                        }
-                        for option in variant.options.all()
-                    ],
-                }
-            )
+            # Group options by attribute
+            options_by_attribute = {}
+            option_ids = []
+            
+            for option in variant.options.all():
+                pav = option.product_attribute_value
+                option_ids.append(str(pav.id))
+                
+                attr_id = pav.attribute_id
+                if attr_id not in options_by_attribute:
+                    options_by_attribute[attr_id] = {
+                        "attribute": {
+                            "object": "attribute",
+                            "id": str(pav.attribute.id),
+                            "name": pav.attribute.name,
+                        },
+                        "attributeValues": [],
+                    }
+                
+                options_by_attribute[attr_id]["attributeValues"].append({
+                    "object": "attributevalueitem",
+                    "id": str(pav.id),
+                    "name": pav.attribute_value.name,
+                })
+            
+            payload.append({
+                "id": str(variant.id),
+                "name": variant.name or "",
+                "sku": variant.sku,
+                "price": float(variant.price),
+                "isActive": variant.is_active,
+                "isSpecialEdition": variant.is_special_edition,
+                "optionIds": option_ids,
+                "attributes": list(options_by_attribute.values()),
+            })
+        
         return payload
