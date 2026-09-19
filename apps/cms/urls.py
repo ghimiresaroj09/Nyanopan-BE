@@ -11,6 +11,7 @@ from .views import (
     OurSustainabilityPublicView,
     PolicyPublicViewSet,
     SiteConfigurationPublicView,
+    SubscriptionPublicView,
 )
 
 app_name = "cms"
@@ -25,4 +26,5 @@ urlpatterns = [
     path("our-sustainability/", OurSustainabilityPublicView.as_view(), name="our-sustainability-public"),
     path("homepage/", HomepagePublicView.as_view(), name="homepage-public"),
     path("homepage/collections/", HomepageCollectionsPublicView.as_view(), name="homepage-collections-public"),
+    path("subscription/", SubscriptionPublicView.as_view(), name="subscription-public"),
 ] + router.urls

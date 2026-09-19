@@ -12,6 +12,7 @@ from .views import (
     OurSustainabilityAdminView,
     PolicyAdminViewSet,
     SiteConfigurationAdminView,
+    SubscriptionAdminListView,
     TeamMemberAdminViewSet,
 )
 
@@ -29,4 +30,5 @@ urlpatterns = [
     path("our-sustainability/", OurSustainabilityAdminView.as_view(), name="our-sustainability-admin"),
     path("homepage/", HomepageAdminView.as_view(), name="homepage-admin"),
     path("homepage/collections/", HomepageCollectionsAdminView.as_view(), name="homepage-collections-admin"),
+    path("subscriptions/", SubscriptionAdminListView.as_view(), name="subscriptions-admin"),
 ] + router.urls

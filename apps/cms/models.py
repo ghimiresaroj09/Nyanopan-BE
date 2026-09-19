@@ -702,3 +702,35 @@ class Collection(TimeStampedModel):
     
     def __str__(self):
         return self.name
+
+
+
+# ============================================================================
+# SUBSCRIPTION MODEL
+# ============================================================================
+
+class Subscription(TimeStampedModel):
+    """Newsletter subscription model."""
+    
+    email = models.EmailField(
+        max_length=255,
+        unique=True,
+        help_text="Subscriber email address"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether subscription is active"
+    )
+    subscribed_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="Subscription date"
+    )
+    
+    class Meta:
+        verbose_name = "Subscription"
+        verbose_name_plural = "Subscriptions"
+        db_table = "cms_subscription"
+        ordering = ['-subscribed_at']
+    
+    def __str__(self):
+        return self.email

@@ -761,3 +761,55 @@ class HomepageCollectionsPublicSerializer(serializers.ModelSerializer):
             'description',
             'collections',
         ]
+
+
+
+# ============================================================================
+# SUBSCRIPTION SERIALIZERS
+# ============================================================================
+
+from .models import Subscription
+
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    """Subscription serializer for public POST and admin GET."""
+    
+    class Meta:
+        model = Subscription
+        fields = [
+            'id',
+            'email',
+            'is_active',
+            'subscribed_at',
+            'created_at',
+        ]
+        read_only_fields = ['id', 'subscribed_at', 'created_at']
+
+
+class SubscriptionCreateSerializer(serializers.ModelSerializer):
+    """Public subscription creation serializer - email only."""
+    
+    class Meta:
+        model = Subscription
+        fields = ['email']
+    
+    def validate_email(self, value):
+        """Check if email already subscribed."""
+        if Subscription.objects.filter(email=value, is_active=True).exists():
+            raise serializers.ValidationError("This email is already subscribed.")
+        return value
+    
+    def create(self, validated_data):
+        """Create or reactivate subscription."""
+        email = validated_data['email']
+        
+        # Check if email exists but inactive
+        subscription = Subscription.objects.filter(email=email).first()
+        if subscription:
+            # Reactivate existing subscription
+            subscription.is_active = True
+            subscription.save()
+            return subscription
+        
+        # Create new subscription
+        return Subscription.objects.create(**validated_data)

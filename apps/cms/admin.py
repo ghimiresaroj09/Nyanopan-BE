@@ -303,3 +303,23 @@ class CollectionAdmin(admin.ModelAdmin):
     list_filter = ['is_active', 'created_at']
     search_fields = ['name', 'intro', 'link']
     ordering = ['sort_order', 'name']
+
+
+
+@admin.register(models.Subscription)
+class SubscriptionAdmin(admin.ModelAdmin):
+    list_display = ['email', 'is_active', 'subscribed_at', 'created_at']
+    list_filter = ['is_active', 'subscribed_at']
+    search_fields = ['email']
+    readonly_fields = ['subscribed_at', 'created_at', 'updated_at']
+    ordering = ['-subscribed_at']
+    
+    fieldsets = (
+        ('Subscription Info', {
+            'fields': ('email', 'is_active'),
+        }),
+        ('Timestamps', {
+            'fields': ('subscribed_at', 'created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )

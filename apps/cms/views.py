@@ -3,7 +3,7 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import status
-from rest_framework.generics import RetrieveAPIView, RetrieveUpdateAPIView
+from rest_framework.generics import GenericAPIView, RetrieveAPIView, RetrieveUpdateAPIView, CreateAPIView, ListAPIView
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAdminUser
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
@@ -391,3 +391,61 @@ class CollectionAdminViewSet(SuccessEnvelopeMixin, ModelViewSet):
             serializer.save(homepage_collections=HomepageCollections.get_collections_page())
         else:
             serializer.save()
+
+
+
+# ============================================================================
+# SUBSCRIPTION VIEWS
+# ============================================================================
+
+from rest_framework.generics import CreateAPIView, ListAPIView
+
+from .models import Subscription
+from .serializers import SubscriptionCreateSerializer, SubscriptionSerializer
+
+
+@extend_schema(
+    auth=[],
+    tags=["Public - Subscription"],
+    description="Subscribe to newsletter. No authentication required.",
+    request=SubscriptionCreateSerializer,
+    responses={201: SubscriptionSerializer},
+)
+class SubscriptionPublicView(SuccessEnvelopeMixin, CreateAPIView):
+    """Public endpoint to subscribe to newsletter."""
+    
+    serializer_class = SubscriptionCreateSerializer
+    permission_classes = []
+    authentication_classes = []
+    
+    def get_success_message(self, request=None):
+        return "Successfully subscribed to newsletter."
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        
+        # Return full subscription data
+        response_serializer = SubscriptionSerializer(instance)
+        return SuccessEnvelopeMixin.success_response(
+            self,
+            data=response_serializer.data,
+            message=self.get_success_message(request),
+            status_code=status.HTTP_201_CREATED
+        )
+
+
+@extend_schema(
+    tags=["Admin - Subscriptions"],
+    description="List all newsletter subscriptions. Admin access only.",
+)
+class SubscriptionAdminListView(SuccessEnvelopeMixin, ListAPIView):
+    """Admin endpoint to list all subscriptions."""
+    
+    serializer_class = SubscriptionSerializer
+    permission_classes = [IsAdminUser]
+    queryset = Subscription.objects.all().order_by('-subscribed_at')
+    success_message = "Subscriptions retrieved successfully."
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['is_active']
