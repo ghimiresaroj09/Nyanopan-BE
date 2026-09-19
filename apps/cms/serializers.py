@@ -322,14 +322,14 @@ class OurStorySerializer(serializers.ModelSerializer):
         instance.section1_description = validated_data.get('section1_description', instance.section1_description)
         section1_image = validated_data.get('section1_image')
         if section1_image is not None:
-            instance.section1_image = section1_image if section1_image != '' else None
+            instance.section1_image = section1_image if section1_image != '' else ''
         
         # Update section2 fields
         instance.section2_title = validated_data.get('section2_title', instance.section2_title)
         instance.section2_description = validated_data.get('section2_description', instance.section2_description)
         section2_image = validated_data.get('section2_image')
         if section2_image is not None:
-            instance.section2_image = section2_image if section2_image != '' else None
+            instance.section2_image = section2_image if section2_image != '' else ''
         
         # Update section3 title
         instance.section3_title = validated_data.get('section3_title', instance.section3_title)
@@ -337,32 +337,46 @@ class OurStorySerializer(serializers.ModelSerializer):
         # Handle subsections if provided
         subsections_data = validated_data.get('section3_subsections')
         if subsections_data is not None:
-            # Get existing subsection IDs
-            existing_ids = set()
+            # If no subsections have IDs, replace all (delete old, create new)
+            has_any_ids = any('id' in item for item in subsections_data)
             
-            for subsection_data in subsections_data:
-                subsection_id = subsection_data.get('id')
-                
-                # Clean up empty image strings
-                if 'image' in subsection_data and subsection_data['image'] == '':
-                    subsection_data['image'] = None
-                
-                if subsection_id:
-                    # Update existing
-                    StorySubsection.objects.filter(id=subsection_id, our_story=instance).update(**{
-                        k: v for k, v in subsection_data.items() if k != 'id'
-                    })
-                    existing_ids.add(subsection_id)
-                else:
-                    # Create new
-                    new_subsection = StorySubsection.objects.create(
+            if not has_any_ids:
+                # Replace mode: delete all existing and create new ones
+                instance.section3_subsections.all().delete()
+                for subsection_data in subsections_data:
+                    # Clean up empty image strings
+                    if 'image' in subsection_data and subsection_data['image'] == '':
+                        subsection_data['image'] = ''
+                    StorySubsection.objects.create(
                         our_story=instance,
                         **subsection_data
                     )
-                    existing_ids.add(new_subsection.id)
-            
-            # Delete subsections not in the provided list (optional - comment out if you don't want auto-delete)
-            # instance.section3_subsections.exclude(id__in=existing_ids).delete()
+            else:
+                # Update/Create mode: match by ID
+                existing_ids = set()
+                for subsection_data in subsections_data:
+                    subsection_id = subsection_data.get('id')
+                    
+                    # Clean up empty image strings
+                    if 'image' in subsection_data and subsection_data['image'] == '':
+                        subsection_data['image'] = ''
+                    
+                    if subsection_id:
+                        # Update existing
+                        StorySubsection.objects.filter(id=subsection_id, our_story=instance).update(**{
+                            k: v for k, v in subsection_data.items() if k != 'id'
+                        })
+                        existing_ids.add(subsection_id)
+                    else:
+                        # Create new
+                        new_subsection = StorySubsection.objects.create(
+                            our_story=instance,
+                            **subsection_data
+                        )
+                        existing_ids.add(new_subsection.id)
+                
+                # Optionally delete subsections not in the provided list
+                # instance.section3_subsections.exclude(id__in=existing_ids).delete()
         
         instance.save()
         return instance
@@ -452,32 +466,46 @@ class OurSustainabilitySerializer(serializers.ModelSerializer):
         # Handle sections if provided
         sections_data = validated_data.get('sections')
         if sections_data is not None:
-            # Get existing section IDs
-            existing_ids = set()
+            # If no sections have IDs, replace all (delete old, create new)
+            has_any_ids = any('id' in item for item in sections_data)
             
-            for section_data in sections_data:
-                section_id = section_data.get('id')
-                
-                # Clean up empty image strings
-                if 'image' in section_data and section_data['image'] == '':
-                    section_data['image'] = None
-                
-                if section_id:
-                    # Update existing
-                    SustainabilitySection.objects.filter(id=section_id, our_sustainability=instance).update(**{
-                        k: v for k, v in section_data.items() if k != 'id'
-                    })
-                    existing_ids.add(section_id)
-                else:
-                    # Create new
-                    new_section = SustainabilitySection.objects.create(
+            if not has_any_ids:
+                # Replace mode: delete all existing and create new ones
+                instance.sections.all().delete()
+                for section_data in sections_data:
+                    # Clean up empty image strings
+                    if 'image' in section_data and section_data['image'] == '':
+                        section_data['image'] = ''
+                    SustainabilitySection.objects.create(
                         our_sustainability=instance,
                         **section_data
                     )
-                    existing_ids.add(new_section.id)
-            
-            # Delete sections not in the provided list (optional - comment out if you don't want auto-delete)
-            # instance.sections.exclude(id__in=existing_ids).delete()
+            else:
+                # Update/Create mode: match by ID
+                existing_ids = set()
+                for section_data in sections_data:
+                    section_id = section_data.get('id')
+                    
+                    # Clean up empty image strings
+                    if 'image' in section_data and section_data['image'] == '':
+                        section_data['image'] = ''
+                    
+                    if section_id:
+                        # Update existing
+                        SustainabilitySection.objects.filter(id=section_id, our_sustainability=instance).update(**{
+                            k: v for k, v in section_data.items() if k != 'id'
+                        })
+                        existing_ids.add(section_id)
+                    else:
+                        # Create new
+                        new_section = SustainabilitySection.objects.create(
+                            our_sustainability=instance,
+                            **section_data
+                        )
+                        existing_ids.add(new_section.id)
+                
+                # Optionally delete sections not in the provided list
+                # instance.sections.exclude(id__in=existing_ids).delete()
         
         instance.save()
         return instance

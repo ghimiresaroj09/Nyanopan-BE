@@ -234,13 +234,11 @@ class TeamMember(TimeStampedModel):
         max_length=255,
         help_text="Team member's full name"
     )
-    image = models.ImageField(
-        upload_to=team_member_image_path,
-        storage=image_storage,
-        validators=[validate_image_upload],
+    image = models.CharField(
+        max_length=500,
         blank=True,
-        null=True,
-        help_text="Team member photo"
+        default='',
+        help_text="Team member image URL (Cloudinary)"
     )
     role = models.CharField(
         max_length=255,
@@ -298,34 +296,33 @@ class OurStory(TimeStampedModel):
     )
     section1_description = models.TextField(
         blank=True,
+        default='',
         help_text="Section 1 description"
     )
-    section1_image = models.ImageField(
-        upload_to=story_image_path,
-        storage=image_storage,
-        validators=[validate_image_upload],
+    section1_image = models.CharField(
+        max_length=500,
         blank=True,
-        null=True,
-        help_text="Section 1 image"
+        default='',
+        help_text="Section 1 image URL (Cloudinary)"
     )
     
     # Section 2
     section2_title = models.CharField(
         max_length=255,
         blank=True,
+        default='',
         help_text="Section 2 title"
     )
     section2_description = models.TextField(
         blank=True,
+        default='',
         help_text="Section 2 description"
     )
-    section2_image = models.ImageField(
-        upload_to=story_image_path,
-        storage=image_storage,
-        validators=[validate_image_upload],
+    section2_image = models.CharField(
+        max_length=500,
         blank=True,
-        null=True,
-        help_text="Section 2 image"
+        default='',
+        help_text="Section 2 image URL (Cloudinary)"
     )
     
     # Section 3 title (subsections stored in StorySubsection model)
@@ -373,13 +370,11 @@ class StorySubsection(TimeStampedModel):
         max_length=255,
         help_text="Subsection title"
     )
-    image = models.ImageField(
-        upload_to=story_subsection_image_path,
-        storage=image_storage,
-        validators=[validate_image_upload],
+    image = models.CharField(
+        max_length=500,
         blank=True,
-        null=True,
-        help_text="Subsection image"
+        default='',
+        help_text="Subsection image URL (Cloudinary)"
     )
     description = models.TextField(
         help_text="Subsection description"
@@ -464,13 +459,11 @@ class SustainabilitySection(TimeStampedModel):
     description = models.TextField(
         help_text="Section description"
     )
-    image = models.ImageField(
-        upload_to=sustainability_section_image_path,
-        storage=image_storage,
-        validators=[validate_image_upload],
+    image = models.CharField(
+        max_length=500,
         blank=True,
-        null=True,
-        help_text="Section image"
+        default='',
+        help_text="Section image URL (Cloudinary)"
     )
     sort_order = models.IntegerField(
         default=0,
