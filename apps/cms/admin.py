@@ -12,6 +12,9 @@ class SiteConfigurationAdmin(admin.ModelAdmin):
     list_display = ['__str__', 'email', 'phone', 'created_at', 'updated_at']
     
     fieldsets = (
+        ('Company Information', {
+            'fields': ('company_intro',),
+        }),
         ('Contact Information', {
             'fields': ('email', 'phone', 'whatsapp'),
         }),

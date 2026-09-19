@@ -16,6 +16,12 @@ class SiteConfiguration(TimeStampedModel):
     # Override parent's UUID field with integer PK for singleton pattern
     id = models.AutoField(primary_key=True)
 
+    # Company Information
+    company_intro = models.TextField(
+        blank=True,
+        help_text="Company introduction or about us text"
+    )
+    
     # Contact Information
     email = models.EmailField(
         max_length=255,

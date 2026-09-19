@@ -13,6 +13,7 @@ class Command(BaseCommand):
         
         # Only set defaults if config is empty
         if not config.email:
+            config.company_intro = "Welcome to our company. We provide quality products and services."
             config.email = "contact@example.com"
             config.phone = "+977-1234567890"
             config.whatsapp = "+977-1234567890"

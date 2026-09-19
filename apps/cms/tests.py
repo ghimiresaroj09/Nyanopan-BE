@@ -16,6 +16,7 @@ def api_client():
 @pytest.fixture
 def site_config():
     config = SiteConfiguration.get_config()
+    config.company_intro = "Test Company Introduction"
     config.email = "test@example.com"
     config.phone = "+977-1234567890"
     config.whatsapp = "+977-9876543210"
@@ -48,6 +49,7 @@ class TestSiteConfigurationPublicAPI:
         response = api_client.get(url)
         
         data = response.data["data"]
+        assert data["company_intro"] == "Test Company Introduction"
         assert data["email"] == "test@example.com"
         assert data["phone"] == "+977-1234567890"
         assert data["whatsapp"] == "+977-9876543210"

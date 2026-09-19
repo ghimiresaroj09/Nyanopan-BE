@@ -23,6 +23,7 @@ class SiteConfigurationSerializer(serializers.ModelSerializer):
         model = SiteConfiguration
         fields = [
             'id',
+            'company_intro',
             'email',
             'phone',
             'whatsapp',
@@ -45,7 +46,7 @@ class SiteConfigurationSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         """Handle updates including nested social data."""
         # Update all simple fields
-        for field in ['email', 'phone', 'whatsapp', 'address', 'map_url']:
+        for field in ['company_intro', 'email', 'phone', 'whatsapp', 'address', 'map_url']:
             if field in validated_data:
                 setattr(instance, field, validated_data[field])
         
@@ -71,6 +72,7 @@ class SiteConfigurationPublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = SiteConfiguration
         fields = [
+            'company_intro',
             'email',
             'phone',
             'whatsapp',
