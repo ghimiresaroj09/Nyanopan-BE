@@ -137,10 +137,17 @@ from .models import OurMakers, TeamMember
 class TeamMemberSerializer(serializers.ModelSerializer):
     """Team member serializer."""
     
+    our_makers = serializers.PrimaryKeyRelatedField(
+        queryset=OurMakers.objects.all(),
+        required=False,
+        help_text="Our Makers page (defaults to singleton page if not provided)"
+    )
+    
     class Meta:
         model = TeamMember
         fields = [
             'id',
+            'our_makers',
             'name',
             'image',
             'role',
@@ -148,6 +155,13 @@ class TeamMemberSerializer(serializers.ModelSerializer):
             'sort_order',
             'is_active',
         ]
+        read_only_fields = ['id']
+    
+    def create(self, validated_data):
+        # If our_makers not provided, use the singleton page
+        if 'our_makers' not in validated_data:
+            validated_data['our_makers'] = OurMakers.get_page()
+        return super().create(validated_data)
 
 
 class TeamMemberPublicSerializer(serializers.ModelSerializer):

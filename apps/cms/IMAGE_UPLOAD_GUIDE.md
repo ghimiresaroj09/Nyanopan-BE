@@ -40,6 +40,7 @@ curl -X POST http://localhost:8000/api/v1/admin/team-members/ \
   -F "image=@/path/to/photo.jpg" \
   -F "sort_order=1" \
   -F "is_active=true"
+  # our_makers field is optional - defaults to the singleton Our Makers page
 ```
 
 **JavaScript/Fetch:**
