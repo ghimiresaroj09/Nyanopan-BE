@@ -220,11 +220,11 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     attributes = serializers.SerializerMethodField()
     product_varient_values = serializers.SerializerMethodField()
     rating = serializers.SerializerMethodField()
-    is_active = serializers.BooleanField(source="is_active")
-    is_featured = serializers.BooleanField(source="is_featured")
-    materials_used = serializers.CharField(source="materials_used")
-    general_information = serializers.CharField(source="general_information")
-    key_features = serializers.JSONField(source="key_features")
+    is_active = serializers.BooleanField()
+    is_featured = serializers.BooleanField()
+    materials_used = serializers.CharField()
+    general_information = serializers.CharField()
+    key_features = serializers.JSONField()
 
     class Meta:
         model = Product
