@@ -9,8 +9,6 @@ from .views import (
     OurSustainabilityAdminView,
     PolicyAdminViewSet,
     SiteConfigurationAdminView,
-    StorySubsectionAdminViewSet,
-    SustainabilitySectionAdminViewSet,
     TeamMemberAdminViewSet,
 )
 
@@ -19,8 +17,6 @@ app_name = "cms_admin"
 router = DefaultRouter()
 router.register(r'policies', PolicyAdminViewSet, basename='policy-admin')
 router.register(r'team-members', TeamMemberAdminViewSet, basename='team-member-admin')
-router.register(r'story-subsections', StorySubsectionAdminViewSet, basename='story-subsection-admin')
-router.register(r'sustainability-sections', SustainabilitySectionAdminViewSet, basename='sustainability-section-admin')
 
 urlpatterns = [
     path("configuration/", SiteConfigurationAdminView.as_view(), name="configuration-admin"),
@@ -28,4 +24,3 @@ urlpatterns = [
     path("our-story/", OurStoryAdminView.as_view(), name="our-story-admin"),
     path("our-sustainability/", OurSustainabilityAdminView.as_view(), name="our-sustainability-admin"),
 ] + router.urls
-

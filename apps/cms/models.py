@@ -1,9 +1,38 @@
 """CMS models for site configuration and policies."""
 
+import uuid
+
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 
 from apps.common.models import TimeStampedModel
+from apps.common.storages import image_storage
+from apps.common.validators import validate_image_upload
+
+
+def _cms_image_path(folder, filename):
+    """Generate upload path for CMS images."""
+    base = (getattr(settings, "CLOUDINARY_UPLOAD_FOLDER", "") or "ecommerce").strip("/")
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in (filename or "") else ""
+    name = f"{uuid.uuid4().hex}.{ext}" if ext else uuid.uuid4().hex
+    return f"{base}/cms/{folder}/{name}"
+
+
+def team_member_image_path(instance, filename):
+    return _cms_image_path("team-members", filename)
+
+
+def story_image_path(instance, filename):
+    return _cms_image_path("story", filename)
+
+
+def story_subsection_image_path(instance, filename):
+    return _cms_image_path("story-subsections", filename)
+
+
+def sustainability_section_image_path(instance, filename):
+    return _cms_image_path("sustainability", filename)
 
 
 class SiteConfiguration(TimeStampedModel):
@@ -205,10 +234,13 @@ class TeamMember(TimeStampedModel):
         max_length=255,
         help_text="Team member's full name"
     )
-    image = models.CharField(
-        max_length=500,
+    image = models.ImageField(
+        upload_to=team_member_image_path,
+        storage=image_storage,
+        validators=[validate_image_upload],
         blank=True,
-        help_text="Cloudinary image URL or reference name"
+        null=True,
+        help_text="Team member photo"
     )
     role = models.CharField(
         max_length=255,
@@ -268,10 +300,13 @@ class OurStory(TimeStampedModel):
         blank=True,
         help_text="Section 1 description"
     )
-    section1_image = models.CharField(
-        max_length=500,
+    section1_image = models.ImageField(
+        upload_to=story_image_path,
+        storage=image_storage,
+        validators=[validate_image_upload],
         blank=True,
-        help_text="Section 1 image (Cloudinary URL or reference)"
+        null=True,
+        help_text="Section 1 image"
     )
     
     # Section 2
@@ -284,10 +319,13 @@ class OurStory(TimeStampedModel):
         blank=True,
         help_text="Section 2 description"
     )
-    section2_image = models.CharField(
-        max_length=500,
+    section2_image = models.ImageField(
+        upload_to=story_image_path,
+        storage=image_storage,
+        validators=[validate_image_upload],
         blank=True,
-        help_text="Section 2 image (Cloudinary URL or reference)"
+        null=True,
+        help_text="Section 2 image"
     )
     
     # Section 3 title (subsections stored in StorySubsection model)
@@ -335,10 +373,13 @@ class StorySubsection(TimeStampedModel):
         max_length=255,
         help_text="Subsection title"
     )
-    image = models.CharField(
-        max_length=500,
+    image = models.ImageField(
+        upload_to=story_subsection_image_path,
+        storage=image_storage,
+        validators=[validate_image_upload],
         blank=True,
-        help_text="Subsection image (Cloudinary URL or reference)"
+        null=True,
+        help_text="Subsection image"
     )
     description = models.TextField(
         help_text="Subsection description"
@@ -423,10 +464,13 @@ class SustainabilitySection(TimeStampedModel):
     description = models.TextField(
         help_text="Section description"
     )
-    image = models.CharField(
-        max_length=500,
+    image = models.ImageField(
+        upload_to=sustainability_section_image_path,
+        storage=image_storage,
+        validators=[validate_image_upload],
         blank=True,
-        help_text="Section image (Cloudinary URL or reference)"
+        null=True,
+        help_text="Section image"
     )
     sort_order = models.IntegerField(
         default=0,

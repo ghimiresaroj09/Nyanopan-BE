@@ -4,6 +4,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import status
 from rest_framework.generics import RetrieveAPIView, RetrieveUpdateAPIView
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAdminUser
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
@@ -15,8 +16,6 @@ from .models import (
     OurSustainability,
     Policy,
     SiteConfiguration,
-    StorySubsection,
-    SustainabilitySection,
     TeamMember,
 )
 from .serializers import (
@@ -30,8 +29,6 @@ from .serializers import (
     PolicySerializer,
     SiteConfigurationPublicSerializer,
     SiteConfigurationSerializer,
-    StorySubsectionSerializer,
-    SustainabilitySectionSerializer,
     TeamMemberSerializer,
 )
 
@@ -166,6 +163,7 @@ class OurMakersAdminView(SuccessEnvelopeMixin, RetrieveUpdateAPIView):
     
     serializer_class = OurMakersSerializer
     permission_classes = [IsAdminUser]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
     
     def get_success_message(self, request=None):
         if request and request.method in ['PUT', 'PATCH']:
@@ -185,6 +183,7 @@ class TeamMemberAdminViewSet(SuccessEnvelopeMixin, ModelViewSet):
     
     serializer_class = TeamMemberSerializer
     permission_classes = [IsAdminUser]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
     queryset = TeamMember.objects.all().order_by('sort_order', 'name')
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['is_active', 'our_makers']
@@ -226,6 +225,7 @@ class OurStoryAdminView(SuccessEnvelopeMixin, RetrieveUpdateAPIView):
     
     serializer_class = OurStorySerializer
     permission_classes = [IsAdminUser]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
     
     def get_success_message(self, request=None):
         if request and request.method in ['PUT', 'PATCH']:
@@ -234,30 +234,6 @@ class OurStoryAdminView(SuccessEnvelopeMixin, RetrieveUpdateAPIView):
     
     def get_object(self):
         return OurStory.get_page()
-
-
-@extend_schema(
-    tags=["Admin - Story Subsections"],
-    description="Manage story subsections for Section 3. Admin access only.",
-)
-class StorySubsectionAdminViewSet(SuccessEnvelopeMixin, ModelViewSet):
-    """Admin endpoint to manage story subsections."""
-    
-    serializer_class = StorySubsectionSerializer
-    permission_classes = [IsAdminUser]
-    queryset = StorySubsection.objects.all().order_by('sort_order', 'created_at')
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['is_active', 'our_story']
-    
-    def get_success_message(self, request=None):
-        if request and request.method == 'POST':
-            return "Subsection created successfully."
-        elif request and request.method in ['PUT', 'PATCH']:
-            return "Subsection updated successfully."
-        elif request and request.method == 'DELETE':
-            return "Subsection deleted successfully."
-        return "Subsection retrieved successfully."
-
 
 
 @extend_schema(
@@ -286,6 +262,7 @@ class OurSustainabilityAdminView(SuccessEnvelopeMixin, RetrieveUpdateAPIView):
     
     serializer_class = OurSustainabilitySerializer
     permission_classes = [IsAdminUser]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
     
     def get_success_message(self, request=None):
         if request and request.method in ['PUT', 'PATCH']:
@@ -294,26 +271,3 @@ class OurSustainabilityAdminView(SuccessEnvelopeMixin, RetrieveUpdateAPIView):
     
     def get_object(self):
         return OurSustainability.get_page()
-
-
-@extend_schema(
-    tags=["Admin - Sustainability Sections"],
-    description="Manage sustainability sections. Admin access only.",
-)
-class SustainabilitySectionAdminViewSet(SuccessEnvelopeMixin, ModelViewSet):
-    """Admin endpoint to manage sustainability sections."""
-    
-    serializer_class = SustainabilitySectionSerializer
-    permission_classes = [IsAdminUser]
-    queryset = SustainabilitySection.objects.all().order_by('sort_order', 'created_at')
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['is_active', 'our_sustainability']
-    
-    def get_success_message(self, request=None):
-        if request and request.method == 'POST':
-            return "Section created successfully."
-        elif request and request.method in ['PUT', 'PATCH']:
-            return "Section updated successfully."
-        elif request and request.method == 'DELETE':
-            return "Section deleted successfully."
-        return "Section retrieved successfully."

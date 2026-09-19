@@ -222,6 +222,7 @@ class StorySubsectionSerializer(serializers.ModelSerializer):
             'sort_order',
             'is_active',
         ]
+        read_only_fields = ['id']
 
 
 class StorySubsectionPublicSerializer(serializers.ModelSerializer):
@@ -253,12 +254,7 @@ class Section2Serializer(serializers.Serializer):
 class Section3Serializer(serializers.Serializer):
     """Nested serializer for Section 3 with subsections."""
     title = serializers.CharField(source='section3_title')
-    subsections = serializers.SerializerMethodField()
-    
-    def get_subsections(self, obj):
-        # For admin, include all subsections
-        subsections = obj.section3_subsections.all().order_by('sort_order', 'created_at')
-        return StorySubsectionSerializer(subsections, many=True).data
+    subsections = StorySubsectionSerializer(source='section3_subsections', many=True, read_only=False)
 
 
 class Section3PublicSerializer(serializers.Serializer):
@@ -277,7 +273,7 @@ class OurStorySerializer(serializers.ModelSerializer):
     
     section1 = Section1Serializer(source='*', read_only=True)
     section2 = Section2Serializer(source='*', read_only=True)
-    section3 = Section3Serializer(source='*', read_only=True)
+    section3 = Section3Serializer(source='*')
     
     class Meta:
         model = OurStory
@@ -292,6 +288,47 @@ class OurStorySerializer(serializers.ModelSerializer):
             'updated_at',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def update(self, instance, validated_data):
+        """Handle nested subsections update."""
+        # Update simple fields
+        instance.title = validated_data.get('title', instance.title)
+        instance.description = validated_data.get('description', instance.description)
+        instance.section1_title = validated_data.get('section1_title', instance.section1_title)
+        instance.section1_description = validated_data.get('section1_description', instance.section1_description)
+        instance.section1_image = validated_data.get('section1_image', instance.section1_image)
+        instance.section2_title = validated_data.get('section2_title', instance.section2_title)
+        instance.section2_description = validated_data.get('section2_description', instance.section2_description)
+        instance.section2_image = validated_data.get('section2_image', instance.section2_image)
+        instance.section3_title = validated_data.get('section3_title', instance.section3_title)
+        
+        # Handle subsections if provided
+        subsections_data = validated_data.get('section3_subsections')
+        if subsections_data is not None:
+            # Get existing subsection IDs
+            existing_ids = set()
+            
+            for subsection_data in subsections_data:
+                subsection_id = subsection_data.get('id')
+                if subsection_id:
+                    # Update existing
+                    StorySubsection.objects.filter(id=subsection_id, our_story=instance).update(**{
+                        k: v for k, v in subsection_data.items() if k != 'id'
+                    })
+                    existing_ids.add(subsection_id)
+                else:
+                    # Create new
+                    new_subsection = StorySubsection.objects.create(
+                        our_story=instance,
+                        **subsection_data
+                    )
+                    existing_ids.add(new_subsection.id)
+            
+            # Delete subsections not in the provided list (optional - comment out if you don't want auto-delete)
+            # instance.section3_subsections.exclude(id__in=existing_ids).delete()
+        
+        instance.save()
+        return instance
 
 
 class OurStoryPublicSerializer(serializers.ModelSerializer):
@@ -329,6 +366,7 @@ class SustainabilitySectionSerializer(serializers.ModelSerializer):
             'sort_order',
             'is_active',
         ]
+        read_only_fields = ['id']
 
 
 class SustainabilitySectionPublicSerializer(serializers.ModelSerializer):
@@ -346,7 +384,7 @@ class SustainabilitySectionPublicSerializer(serializers.ModelSerializer):
 class OurSustainabilitySerializer(serializers.ModelSerializer):
     """Our Sustainability page serializer with nested sections."""
     
-    sections = SustainabilitySectionSerializer(many=True, read_only=True)
+    sections = SustainabilitySectionSerializer(many=True, read_only=False)
     
     class Meta:
         model = OurSustainability
@@ -359,6 +397,40 @@ class OurSustainabilitySerializer(serializers.ModelSerializer):
             'updated_at',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def update(self, instance, validated_data):
+        """Handle nested sections update."""
+        # Update simple fields
+        instance.title = validated_data.get('title', instance.title)
+        instance.description = validated_data.get('description', instance.description)
+        
+        # Handle sections if provided
+        sections_data = validated_data.get('sections')
+        if sections_data is not None:
+            # Get existing section IDs
+            existing_ids = set()
+            
+            for section_data in sections_data:
+                section_id = section_data.get('id')
+                if section_id:
+                    # Update existing
+                    SustainabilitySection.objects.filter(id=section_id, our_sustainability=instance).update(**{
+                        k: v for k, v in section_data.items() if k != 'id'
+                    })
+                    existing_ids.add(section_id)
+                else:
+                    # Create new
+                    new_section = SustainabilitySection.objects.create(
+                        our_sustainability=instance,
+                        **section_data
+                    )
+                    existing_ids.add(new_section.id)
+            
+            # Delete sections not in the provided list (optional - comment out if you don't want auto-delete)
+            # instance.sections.exclude(id__in=existing_ids).delete()
+        
+        instance.save()
+        return instance
 
 
 class OurSustainabilityPublicSerializer(serializers.ModelSerializer):
