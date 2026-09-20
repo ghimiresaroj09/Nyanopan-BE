@@ -88,7 +88,7 @@ class ProductFilter(django_filters.FilterSet):
     # Attribute value filters - support multiple values for same attribute
     attribute = django_filters.CharFilter(
         method="filter_by_attribute",
-        help_text="Filter by attribute slug and value slug (e.g., ?attribute=color:grey or ?attribute=color:grey&attribute=size:large)"
+        help_text="Filter by attribute name and value name (e.g., ?attribute=color:grey or ?attribute=Color:Grey)"
     )
 
     class Meta:
@@ -105,30 +105,41 @@ class ProductFilter(django_filters.FilterSet):
         return self._active_variants(queryset).filter(variants__price__lte=value).distinct()
     
     def filter_by_attribute(self, queryset, name, value):
-        """Filter products by attribute value slug.
+        """Filter products by attribute value name.
+        
+        This method is called once for EACH attribute parameter.
+        When multiple attributes are provided, django-filters calls this method
+        multiple times, each time passing the already-filtered queryset.
         
         Supports multiple formats:
         - ?attribute=color:grey (single value)
-        - ?attribute=color:grey&attribute=color:black (multiple values for same attribute - OR)
-        - ?attribute=color:grey&attribute=size:large (different attributes - AND)
+        - ?attribute=color:grey&attribute=color:black (multiple values for same attribute - OR via separate queries)
+        - ?attribute=color:grey&attribute=size:large (different attributes - AND via chaining)
         
-        Format: attribute_slug:value_slug
+        Format: attribute_name:value_name (case-insensitive)
+        
+        Examples:
+        - attribute=color:grey or attribute=Color:Grey
+        - attribute=size:large or attribute=Size:Large
         """
         if not value or ":" not in value:
             return queryset
         
         try:
-            attribute_slug, value_slug = value.split(":", 1)
-            attribute_slug = attribute_slug.strip()
-            value_slug = value_slug.strip()
+            attribute_name, value_name = value.split(":", 1)
+            attribute_name = attribute_name.strip()
+            value_name = value_name.strip()
             
-            # Filter products that have this attribute value
+            if not attribute_name or not value_name:
+                return queryset
+            
+            # Filter products that have this attribute value (case-insensitive)
             return queryset.filter(
-                attribute_values__attribute__slug=attribute_slug,
-                attribute_values__attribute_value__slug=value_slug,
+                attribute_values__attribute__name__iexact=attribute_name,
+                attribute_values__attribute_value__name__iexact=value_name,
                 attribute_values__is_active=True
             ).distinct()
-        except ValueError:
+        except (ValueError, AttributeError):
             # Invalid format, return unfiltered
             return queryset
 

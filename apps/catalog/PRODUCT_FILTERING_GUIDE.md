@@ -4,7 +4,7 @@
 
 The public product list API (`GET /api/v1/products/`) now supports comprehensive filtering by:
 - **Model** (product model slug)
-- **Attribute Values** (color, size, material, etc.)
+- **Attribute Values** (color, size, material, etc.) - **Uses attribute NAMES, not slugs**
 - **Category, Gender, Usage Location, Sole Type**
 - **Price Range**
 - **Featured Status**
@@ -41,33 +41,23 @@ Filter products by their attribute values (color, size, material, etc.)
 
 **Parameter:** `attribute`
 
-**Format:** `attribute_slug:value_slug`
+**Format:** `attribute_name:value_name` (case-insensitive)
+
+**⚠️ Important:** Use attribute **NAMES** (e.g., "Color", "Size"), NOT slugs. The Attribute and AttributeValue models don't have slug fields.
 
 #### Single Attribute Value
 
 ```bash
 # Get all grey products
 GET /api/v1/products/?attribute=color:grey
+GET /api/v1/products/?attribute=Color:Grey  # Case-insensitive
 
 # Get all large products
 GET /api/v1/products/?attribute=size:large
+GET /api/v1/products/?attribute=Size:Large  # Also works
 ```
 
-#### Multiple Values for Same Attribute (OR Logic)
-
-When you specify multiple values for the same attribute, products matching **ANY** of those values are returned.
-
-```bash
-# Get products that are grey OR black
-GET /api/v1/products/?attribute=color:grey&attribute=color:black
-
-# Get products that are small OR medium OR large
-GET /api/v1/products/?attribute=size:small&attribute=size:medium&attribute=size:large
-```
-
-**Result:** Products with color = grey **OR** color = black
-
-#### Multiple Different Attributes (AND Logic)
+#### Multiple Attributes (AND Logic)
 
 When you specify different attributes, products must match **ALL** specified attributes.
 
@@ -80,24 +70,6 @@ GET /api/v1/products/?attribute=material:wool&attribute=color:grey&attribute=siz
 ```
 
 **Result:** Products with color = grey **AND** size = large
-
-#### Complex Combinations
-
-You can mix OR and AND logic:
-
-```bash
-# Products that are (grey OR black) AND (large OR medium)
-GET /api/v1/products/?attribute=color:grey&attribute=color:black&attribute=size:large&attribute=size:medium
-```
-
-**Logic Explanation:**
-- Same attribute slug = OR within that group
-- Different attribute slugs = AND between groups
-
-So the above query means:
-```
-(color = grey OR color = black) AND (size = large OR size = medium)
-```
 
 ---
 
