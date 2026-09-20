@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework.generics import GenericAPIView, RetrieveAPIView, RetrieveUpdateAPIView, CreateAPIView, ListAPIView
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from apps.common.responses import SuccessEnvelopeMixin
@@ -428,11 +429,9 @@ class SubscriptionPublicView(SuccessEnvelopeMixin, CreateAPIView):
         
         # Return full subscription data
         response_serializer = SubscriptionSerializer(instance)
-        return SuccessEnvelopeMixin.success_response(
-            self,
-            data=response_serializer.data,
-            message=self.get_success_message(request),
-            status_code=status.HTTP_201_CREATED
+        return Response(
+            response_serializer.data,
+            status=status.HTTP_201_CREATED
         )
 
 
@@ -490,11 +489,9 @@ class ContactUsPublicView(SuccessEnvelopeMixin, CreateAPIView):
         
         # Return full message data
         response_serializer = ContactMessageSerializer(instance)
-        return SuccessEnvelopeMixin.success_response(
-            self,
-            data=response_serializer.data,
-            message=self.get_success_message(request),
-            status_code=status.HTTP_201_CREATED
+        return Response(
+            response_serializer.data,
+            status=status.HTTP_201_CREATED
         )
 
 
