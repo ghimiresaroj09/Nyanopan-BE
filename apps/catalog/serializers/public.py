@@ -186,6 +186,16 @@ class ProductListSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(IMAGE_SCHEMA)
     def get_primary_image(self, obj):
+        # Use product's feature_image if available
+        if obj.feature_image and obj.feature_image.name:
+            return {
+                "url": _absolute_media_url(self.context, obj.feature_image.url),
+                "title": obj.feature_image_title or "",
+                "caption": obj.feature_image_caption or "",
+                "alt": obj.feature_image_alt or "",
+            }
+        
+        # Fallback to first attribute value feature image if product has no feature_image
         images = getattr(obj, "prefetched_images", None)
         if images is None:
             pav = (
@@ -200,8 +210,10 @@ class ProductListSerializer(serializers.ModelSerializer):
             )
         else:
             pav = images[0] if images else None
+        
         if not pav or not pav.feature_image.name:
             return None
+        
         return {
             "url": _absolute_media_url(self.context, pav.feature_image.url),
             "title": pav.feature_image_title or "",

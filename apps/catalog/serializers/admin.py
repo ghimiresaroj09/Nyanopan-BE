@@ -638,6 +638,11 @@ class ProductAdminListSerializer(serializers.ModelSerializer):
     
     @extend_schema_field(IMAGE_SCHEMA)
     def get_primary_image(self, obj):
+        # Use product's feature_image if available
+        if obj.feature_image and obj.feature_image.name:
+            return ImageObjectField(prefix="feature_image").to_representation(obj)
+        
+        # Fallback to first attribute value feature image if product has no feature_image
         images = getattr(obj, "prefetched_images", None)
         if images is None:
             pav = (
@@ -652,8 +657,10 @@ class ProductAdminListSerializer(serializers.ModelSerializer):
             )
         else:
             pav = images[0] if images else None
+        
         if not pav or not pav.feature_image.name:
             return None
+        
         return ImageObjectField(prefix="feature_image").to_representation(pav)
 
 
