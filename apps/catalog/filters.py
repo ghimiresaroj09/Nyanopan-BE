@@ -66,7 +66,12 @@ from .models import (
 
 
 class ProductFilter(django_filters.FilterSet):
-    """Public product filtering: category slug, model, gender, usage_location, sole_type, featured, price range, attribute values."""
+    """Public product filtering: category slug, model, gender, usage_location, sole_type, featured, price range, attribute values.
+    
+    Supports two attribute filtering formats:
+    1. Name-based: ?attribute=color:grey&attribute=size:large
+    2. ID-based (frontend): ?attribute_{attr_id}={value_id}
+    """
 
     category = django_filters.CharFilter(field_name="category__slug", lookup_expr="iexact")
     model = django_filters.CharFilter(field_name="model__slug", lookup_expr="iexact", help_text="Filter by product model slug (e.g., celsi-wool-felt)")
@@ -94,6 +99,11 @@ class ProductFilter(django_filters.FilterSet):
     class Meta:
         model = Product
         fields: list[str] = []
+
+    def __init__(self, data=None, queryset=None, *, request=None, prefix=None):
+        super().__init__(data=data, queryset=queryset, request=request, prefix=prefix)
+        # Store request for later use in qs property
+        self._request = request
 
     def _active_variants(self, queryset):
         return queryset.filter(variants__is_active=True)
@@ -142,6 +152,57 @@ class ProductFilter(django_filters.FilterSet):
         except (ValueError, AttributeError):
             # Invalid format, return unfiltered
             return queryset
+    
+    @property
+    def qs(self):
+        """Override to handle dynamic attribute_{id}={value_id} parameters from frontend."""
+        queryset = super().qs
+        
+        # Get request data
+        request_data = None
+        if self._request:
+            request_data = self._request.GET
+        elif self.data:
+            request_data = self.data
+        
+        if not request_data:
+            return queryset
+        
+        # Handle dynamic attribute_<uuid>=<uuid> parameters from frontend
+        # Format: ?attribute_af4f4dfb-fe59-4d2f-a5b2-e9d0a697f164=332dd17b-7d92-417f-b5b4-8169d23fb417
+        # This allows filtering by: attribute ID + value ID (used by frontend)
+        for param_name in request_data.keys():
+            if param_name.startswith('attribute_'):
+                try:
+                    # Extract attribute ID from parameter name
+                    attribute_id = param_name.replace('attribute_', '')
+                    
+                    # Validate it looks like a UUID (simple check)
+                    if len(attribute_id) == 36 and attribute_id.count('-') == 4:
+                        # Get value IDs (can be multiple for OR logic)
+                        value_ids = request_data.getlist(param_name)
+                        
+                        if value_ids:
+                            # Filter products that have ANY of these attribute values
+                            # Multiple values = OR logic for the same attribute
+                            from django.db.models import Q
+                            q_objects = Q()
+                            for value_id in value_ids:
+                                value_id = value_id.strip()
+                                if value_id:
+                                    q_objects |= Q(
+                                        attribute_values__attribute_id=attribute_id,
+                                        attribute_values__attribute_value_id=value_id,
+                                        attribute_values__is_active=True
+                                    )
+                            
+                            if q_objects:
+                                queryset = queryset.filter(q_objects)
+                except (ValueError, AttributeError):
+                    # Invalid UUID format, skip this parameter
+                    continue
+        
+        return queryset.distinct()
 
 
 class ProductAdminFilter(ProductFilter):

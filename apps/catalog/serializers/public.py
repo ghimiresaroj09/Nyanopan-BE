@@ -366,7 +366,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             # Build attribute value item
             value_item = {
                 "object": "attributevalueitem",
-                "id": str(pav.id),
+                "id": str(pav.attribute_value.id),  # ← FIXED: Return AttributeValue.id, not ProductAttributeValue.id
                 "name": pav.attribute_value.name,
             }
             
@@ -407,7 +407,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
                 
                 options_by_attribute[attr_id]["attributeValues"].append({
                     "object": "attributevalueitem",
-                    "id": str(pav.id),
+                    "id": str(pav.attribute_value.id),  # ← FIXED: Return AttributeValue.id, not ProductAttributeValue.id
                     "name": pav.attribute_value.name,
                 })
             
