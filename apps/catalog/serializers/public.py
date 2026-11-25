@@ -168,7 +168,7 @@ class ProductListSerializer(serializers.ModelSerializer):
         if variants is None:
             variants = list(
                 obj.variants.filter(is_active=True)
-                .order_by("price", "id")
+                .order_by("price", "created_at", "id")
             )
         return list(variants)
 
@@ -310,7 +310,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
                 )
                 .select_related("attribute", "attribute_value")
                 .prefetch_related("additional_images")
-                .order_by("attribute__name", "attribute_value__name")
+                .order_by("attribute__display_order", "attribute__name", "attribute__id", "attribute_value__name", "attribute_value__id")
             )
         return list(pavs)
 
@@ -321,7 +321,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
                 obj.variants.filter(is_active=True)
                 .prefetch_related("options__product_attribute_value__attribute")
                 .prefetch_related("options__product_attribute_value__attribute_value")
-                .order_by("id")
+                .order_by("created_at", "id")
             )
         return list(variants)
 

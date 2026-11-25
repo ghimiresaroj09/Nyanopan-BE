@@ -214,6 +214,11 @@ class Attribute(TimeStampedModel):
     """
 
     name = models.CharField(max_length=100, unique=True)
+    display_order = models.PositiveIntegerField(
+        default=0,
+        db_index=True,
+        help_text="Controls the order in which this attribute is displayed.",
+    )
     requires_image = models.BooleanField(
         default=False,
         help_text="When enabled, active product values of this attribute require a feature image.",
@@ -221,7 +226,7 @@ class Attribute(TimeStampedModel):
     is_active = models.BooleanField(default=True, db_index=True)
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["display_order", "name", "id"]
 
     def __str__(self) -> str:
         return self.name

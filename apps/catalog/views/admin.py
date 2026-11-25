@@ -325,12 +325,12 @@ class AdminAttributeViewSet(AdminViewSetMixin, ModelViewSet):
     queryset = (
         Attribute.objects.annotate(values_count=Count("values"))
         .prefetch_related("values")
-        .order_by("name")
+        .order_by("display_order", "name", "id")
     )
     serializer_class = AttributeAdminSerializer
     search_fields = ["name"]
-    ordering_fields = ["name", "created_at", "is_active"]
-    ordering = ["name"]
+    ordering_fields = ["display_order", "name", "created_at", "is_active"]
+    ordering = ["display_order", "name", "id"]
     filterset_fields = ["is_active", "requires_image"]
 
     def _read_response(self, instance, *, status_code):

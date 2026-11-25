@@ -37,6 +37,7 @@ class ProductVariantValuesService:
         """Return the product's stored palette and generated variants."""
         variants = list(
             ProductVariant.objects.filter(product=product)
+            .order_by("created_at", "id")
             .prefetch_related("options__product_attribute_value")
         )
         return {
@@ -164,7 +165,13 @@ class ProductVariantValuesService:
         pavs = (
             ProductAttributeValue.objects.filter(product=product)
             .select_related("attribute", "attribute_value")
-            .order_by("attribute__name", "attribute_value__name")
+            .order_by(
+                "attribute__display_order",
+                "attribute__name",
+                "attribute__id",
+                "attribute_value__name",
+                "attribute_value__id",
+            )
         )
         for pav in pavs:
             key = str(pav.attribute_id)
@@ -172,7 +179,14 @@ class ProductVariantValuesService:
                 key, {"attribute": pav.attribute, "options": []}
             )
             group["options"].append(pav.attribute_value)
-        return list(groups.values())
+        return sorted(
+            groups.values(),
+            key=lambda group: (
+                group["attribute"].display_order,
+                group["attribute"].name,
+                str(group["attribute"].id),
+            ),
+        )
 
     # -- palette ------------------------------------------------------------
     @staticmethod

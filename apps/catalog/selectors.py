@@ -104,11 +104,11 @@ def product_model_public_queryset():
 
 
 def attribute_public_queryset():
-    values_queryset = AttributeValue.objects.filter(is_active=True).order_by("name")
+    values_queryset = AttributeValue.objects.filter(is_active=True).order_by("name", "id")
     return (
         Attribute.objects.filter(is_active=True)
         .prefetch_related(Prefetch("values", queryset=values_queryset, to_attr="active_values"))
-        .order_by("name")
+        .order_by("display_order", "name", "id")
     )
 
 
