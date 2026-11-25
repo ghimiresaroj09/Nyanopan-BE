@@ -48,6 +48,22 @@ class TestBulkCreate:
         assert response.status_code == 400
         assert AttributeValue.objects.filter(attribute=size_attr).count() == 0
 
+    def test_attribute_update_keeps_ids_for_existing_names(
+        self, admin_client, color_attr, grey, blue
+    ):
+        response = admin_client.patch(
+            f"/api/v1/admin/attributes/{color_attr.id}/",
+            {"value": ["Blue", "Grey", "Cyan"]},
+            format="json",
+        )
+        assert response.status_code == 200
+        grey.refresh_from_db()
+        blue.refresh_from_db()
+        assert grey.pk
+        assert blue.pk
+        assert AttributeValue.objects.get(attribute=color_attr, name="Grey").pk == grey.pk
+        assert AttributeValue.objects.get(attribute=color_attr, name="Blue").pk == blue.pk
+
     def test_blank_and_empty_rejected(self, admin_client, size_attr):
         response = admin_client.post(
             URL, {"attribute": str(size_attr.id), "value": ["41", "  "]}, format="json"

@@ -6,6 +6,7 @@ import pytest
 from PIL import Image
 
 from apps.catalog.models import (
+    AttributeValue,
     Category,
     Product,
     ProductAttributeValue,
@@ -51,6 +52,44 @@ class TestUuidIds:
         response = admin_client.get(f"/api/v1/admin/products/{uuid.uuid4()}/")
         assert response.status_code == 404
         assert response.data["success"] is False
+
+    def test_attribute_value_ids_match_variant_values_endpoint(
+        self, admin_client, product_full
+    ):
+        admin = status_data(
+            admin_client.get(f"/api/v1/admin/products/{product_full.id}/")
+        )
+        palette = status_data(
+            admin_client.get(f"/api/v1/productvarientvalues/{product_full.id}")
+        )
+
+        admin_ids = {
+            value["id"]
+            for group in admin["attributes"]
+            for value in group["attributeValues"]
+        }
+        palette_ids = {
+            option["id"]
+            for group in palette["attributes"]
+            for option in group["options"]
+        }
+        assert admin_ids == palette_ids
+
+        existing_value_ids = {
+            str(value_id)
+            for value_id in AttributeValue.objects.filter(
+                product_values__product=product_full
+            ).values_list("id", flat=True)
+        }
+        for variant in admin["product_varient_values"]:
+            assert set(variant["optionIds"]) <= existing_value_ids
+        for variant in palette["generatedVarients"]:
+            option_ids = {
+                value_id
+                for group in variant["attributes"]
+                for value_id in group["attributeValues"]
+            }
+            assert option_ids <= existing_value_ids
 
 
 class TestCategoryAdmin:

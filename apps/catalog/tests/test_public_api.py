@@ -4,7 +4,7 @@ import uuid
 
 import pytest
 
-from apps.catalog.models import Product
+from apps.catalog.models import AttributeValue, Product
 from conftest import make_pav, make_variant, success_data
 
 pytestmark = pytest.mark.django_db
@@ -130,6 +130,31 @@ class TestProductList:
 
 
 class TestProductDetail:
+    def test_detail_variant_option_ids_use_attribute_value_ids(
+        self, api_client, product_full
+    ):
+        data = success_data(
+            api_client.get(f"/api/v1/products/{product_full.slug}/")
+        )
+        value_ids = {
+            value["id"]
+            for group in data["attributes"]
+            for value in group["attributeValues"]
+        }
+        assert value_ids
+        for variant in data["product_varient_values"]:
+            assert set(variant["optionIds"]) <= value_ids
+            nested_ids = {
+                value["id"]
+                for group in variant["attributes"]
+                for value in group["attributeValues"]
+            }
+            assert set(variant["optionIds"]) == nested_ids
+            assert all(
+                AttributeValue.objects.filter(pk=value_id).exists()
+                for value_id in variant["optionIds"]
+            )
+
     def test_detail_structure(self, api_client, product_full):
         data = success_data(api_client.get(f"/api/v1/products/{product_full.slug}/"))
         assert data["name"] == "Celsi Wool Felt Slippers"

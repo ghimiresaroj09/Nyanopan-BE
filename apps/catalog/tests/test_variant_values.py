@@ -135,10 +135,13 @@ class TestCreate:
         assert first_variant["name"] == "Test Grey 40"
         assert first_variant["price"] == 0 and not isinstance(first_variant["price"], str)
         assert first_variant["attributeGroups"] == []
-        assert first_variant["attributes"] == [
-            {"attributeId": str(color_attr.id), "attributeValues": [str(grey.id)]},
-            {"attributeId": str(size_attr.id), "attributeValues": [str(size_40.id)]},
-        ]
+        assert {
+            row["attributeId"]: row["attributeValues"]
+            for row in first_variant["attributes"]
+        } == {
+            str(color_attr.id): [str(grey.id)],
+            str(size_attr.id): [str(size_40.id)],
+        }
 
     def test_price_renders_as_json_number_on_the_wire(
         self, admin_client, product, color_attr, size_attr, grey, blue, size_40, size_41

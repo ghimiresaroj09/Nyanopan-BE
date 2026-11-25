@@ -790,7 +790,10 @@ class ProductAdminResponseSerializer(serializers.ModelSerializer):
             
             value_item = {
                 "object": "attributevalueitem",
-                "id": str(pav.id),
+                # Attribute values have one global ID across product/admin
+                # and variant endpoints. ProductAttributeValue is the
+                # product-specific image-bearing join row, not the option ID.
+                "id": str(pav.attribute_value_id),
                 "name": pav.attribute_value.name,
             }
             
@@ -821,7 +824,7 @@ class ProductAdminResponseSerializer(serializers.ModelSerializer):
             
             for option in variant.options.all():
                 pav = option.product_attribute_value
-                option_ids.append(str(pav.id))
+                option_ids.append(str(pav.attribute_value_id))
                 
                 attr_id = pav.attribute_id
                 if attr_id not in options_by_attribute:
@@ -836,7 +839,7 @@ class ProductAdminResponseSerializer(serializers.ModelSerializer):
                 
                 options_by_attribute[attr_id]["attributeValues"].append({
                     "object": "attributevalueitem",
-                    "id": str(pav.id),
+                    "id": str(pav.attribute_value_id),
                     "name": pav.attribute_value.name,
                 })
             

@@ -392,7 +392,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             
             for option in variant.options.all():
                 pav = option.product_attribute_value
-                option_ids.append(str(pav.id))
+                option_ids.append(str(pav.attribute_value_id))
                 
                 attr_id = pav.attribute_id
                 if attr_id not in options_by_attribute:
