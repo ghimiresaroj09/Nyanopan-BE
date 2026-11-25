@@ -21,6 +21,8 @@ from .variant_images import (  # noqa: F401
     ProductVariantImagesUploadSerializer,
 )
 from .variant_values import (  # noqa: F401
+    ProductVariantValuesDeleteRequestSerializer,
+    ProductVariantValuesDeleteResponseSerializer,
     ProductVariantValuesSerializer,
     ProductVariantValuesResponseSerializer,
 )

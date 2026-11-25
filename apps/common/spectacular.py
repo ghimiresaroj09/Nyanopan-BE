@@ -50,6 +50,10 @@ _STATUS_ENVELOPE_PATHS = {
 } | _STAFF_ONLY_PATHS | _INTERNAL_CRON_PATHS
 
 _VARIANT_VALUES_MESSAGE = "ProductVarientValue created successfully"
+_VARIANT_VALUES_MESSAGES = {
+    "get": "ProductVarientValues retrieved successfully",
+    "delete": "ProductVarientValues deleted successfully",
+}
 _VARIANT_IMAGES_MESSAGES = {
     "get": "ProductVarientImages retrieved successfully",
     "post": "ProductVarientImage uploaded successfully",
@@ -60,6 +64,8 @@ _VARIANT_IMAGES_MESSAGES = {
 def _status_message_example(path: str, method: str) -> str:
     """Mirror the views' success messages on status-envelope paths."""
     if path in _VARIANT_VALUES_PATHS:
+        if method in _VARIANT_VALUES_MESSAGES:
+            return _VARIANT_VALUES_MESSAGES[method]
         if method == "patch":
             return "ProductVarientValues updated successfully"
         return _VARIANT_VALUES_MESSAGE
@@ -121,6 +127,20 @@ _ERROR_ENVELOPE = {
         },
     },
     "required": ["success", "message", "errors"],
+}
+
+_VARIANT_VALUES_DELETE_REQUEST = {
+    "type": "object",
+    "properties": {
+        "variantIds": {
+            "type": "array",
+            "description": "IDs of the variants to delete. All IDs must belong to the product in the URL.",
+            "items": {"type": "string", "format": "uuid"},
+            "minItems": 1,
+            "uniqueItems": True,
+        }
+    },
+    "required": ["variantIds"],
 }
 
 
@@ -272,4 +292,30 @@ def envelope_postprocessing_hook(result, generator, request, public):
                         "Cron endpoints disabled: CRON_SECRET is not configured."
                     ),
                 )
+
+    # drf-spectacular intentionally omits request bodies on DELETE operations.
+    # This endpoint supports selective bulk deletion, so add its JSON body to
+    # the live OpenAPI schema consumed by Swagger UI.
+    components.setdefault(
+        "ProductVariantValuesDeleteRequest", _VARIANT_VALUES_DELETE_REQUEST
+    )
+    for path in _VARIANT_VALUES_PATHS:
+        operation = result.get("paths", {}).get(path, {}).get("delete")
+        if operation is not None:
+            operation["requestBody"] = {
+                "required": True,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ProductVariantValuesDeleteRequest"
+                        },
+                        "example": {
+                            "variantIds": [
+                                "550e8400-e29b-41d4-a716-446655440011",
+                                "550e8400-e29b-41d4-a716-446655440012",
+                            ]
+                        },
+                    }
+                },
+            }
     return result

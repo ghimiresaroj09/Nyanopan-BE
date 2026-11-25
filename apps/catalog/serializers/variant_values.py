@@ -196,3 +196,18 @@ class ProductVariantValueResponseSerializer(serializers.Serializer):
 class ProductVariantValuesResponseSerializer(serializers.Serializer):
     attributes = VariantPaletteEchoSerializer(many=True, read_only=True)
     generatedVarients = ProductVariantValueResponseSerializer(many=True, read_only=True)
+
+
+class ProductVariantValuesDeleteResponseSerializer(serializers.Serializer):
+    deletedCount = serializers.IntegerField(read_only=True)
+
+
+class ProductVariantValuesDeleteRequestSerializer(serializers.Serializer):
+    variantIds = serializers.ListField(
+        child=serializers.UUIDField(), min_length=1, allow_empty=False
+    )
+
+    def validate_variantIds(self, value):
+        if len(value) != len(set(value)):
+            raise serializers.ValidationError("Duplicate variant IDs are not allowed.")
+        return value

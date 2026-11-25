@@ -5450,6 +5450,147 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: Not found.
+    get:
+      operationId: productvarientvalues_retrieve
+      description: Returns the product's stored attribute palette and all generated variants,
+        including each variant's selected attribute values.
+      summary: Get generated variants for a product
+      parameters:
+      - in: path
+        name: product_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Product 2/3 - Attributes, Values & Price
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: ProductVarientValues retrieved successfully
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    $ref: '#/components/schemas/ProductVariantValuesResponse'
+                required:
+                - status
+                - message
+                - statusCode
+                - data
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: Validation failed.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: Authentication required.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: Permission denied.
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: Not found.
+    delete:
+      operationId: productvarientvalues_destroy
+      description: Bulk-deletes the generated variants identified by `variantIds`, provided
+        they belong to this product, and their variant-option links. The product's attribute
+        values and their images are preserved. `deletedCount` is the number of variants
+        deleted. If any ID is missing or belongs to another product, the request fails without
+        deleting any variants.
+      summary: Delete selected generated variants for a product
+      parameters:
+      - in: path
+        name: product_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Product 2/3 - Attributes, Values & Price
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: ProductVarientValues deleted successfully
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    $ref: '#/components/schemas/ProductVariantValuesDeleteResponse'
+                required:
+                - status
+                - message
+                - statusCode
+                - data
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: Validation failed.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: Authentication required.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: Permission denied.
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: Not found.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductVariantValuesDeleteRequest'
+            example:
+              variantIds:
+              - 550e8400-e29b-41d4-a716-446655440011
+              - 550e8400-e29b-41d4-a716-446655440012
+        required: true
   /api/v1/productvarientvalues/{product_id}/:
     post:
       operationId: productvarientvalues_create_2
@@ -5605,6 +5746,147 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: Not found.
+    get:
+      operationId: productvarientvalues_retrieve_2
+      description: Returns the product's stored attribute palette and all generated variants,
+        including each variant's selected attribute values.
+      summary: Get generated variants for a product
+      parameters:
+      - in: path
+        name: product_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Product 2/3 - Attributes, Values & Price
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: ProductVarientValues retrieved successfully
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    $ref: '#/components/schemas/ProductVariantValuesResponse'
+                required:
+                - status
+                - message
+                - statusCode
+                - data
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: Validation failed.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: Authentication required.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: Permission denied.
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: Not found.
+    delete:
+      operationId: productvarientvalues_destroy_2
+      description: Bulk-deletes the generated variants identified by `variantIds`, provided
+        they belong to this product, and their variant-option links. The product's attribute
+        values and their images are preserved. `deletedCount` is the number of variants
+        deleted. If any ID is missing or belongs to another product, the request fails without
+        deleting any variants.
+      summary: Delete selected generated variants for a product
+      parameters:
+      - in: path
+        name: product_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Product 2/3 - Attributes, Values & Price
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: ProductVarientValues deleted successfully
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    $ref: '#/components/schemas/ProductVariantValuesDeleteResponse'
+                required:
+                - status
+                - message
+                - statusCode
+                - data
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: Validation failed.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: Authentication required.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: Permission denied.
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: Not found.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductVariantValuesDeleteRequest'
+            example:
+              variantIds:
+              - 550e8400-e29b-41d4-a716-446655440011
+              - 550e8400-e29b-41d4-a716-446655440012
+        required: true
 components:
   schemas:
     AdminLoginResponse:
@@ -8129,6 +8411,27 @@ components:
       required:
       - attributes
       - generatedVarients
+    ProductVariantValuesDeleteRequest:
+      type: object
+      properties:
+        variantIds:
+          type: array
+          description: IDs of the variants to delete. All IDs must belong to the product in the URL.
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+          uniqueItems: true
+      required:
+      - variantIds
+    ProductVariantValuesDeleteResponse:
+      type: object
+      properties:
+        deletedCount:
+          type: integer
+          readOnly: true
+      required:
+      - deletedCount
     ProductVariantValuesResponse:
       type: object
       properties:

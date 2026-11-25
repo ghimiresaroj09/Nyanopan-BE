@@ -16,6 +16,8 @@ from apps.common.responses import SuccessEnvelopeMixin
 
 from ..models import Product
 from ..serializers.variant_values import (
+    ProductVariantValuesDeleteRequestSerializer,
+    ProductVariantValuesDeleteResponseSerializer,
     ProductVariantValuesPatchSerializer,
     ProductVariantValuesResponseSerializer,
     ProductVariantValuesSerializer,
@@ -179,6 +181,10 @@ class ProductVariantValuesView(SuccessEnvelopeMixin, APIView):
     use_status_envelope = True
 
     def get_success_message(self, request) -> str:
+        if request.method == "GET":
+            return "ProductVarientValues retrieved successfully"
+        if request.method == "DELETE":
+            return "ProductVarientValues deleted successfully"
         if request.method == "PATCH":
             return "ProductVarientValues updated successfully"
         return "ProductVarientValue created successfully"
@@ -211,6 +217,41 @@ class ProductVariantValuesView(SuccessEnvelopeMixin, APIView):
         )
         output = ProductVariantValuesResponseSerializer(result)
         return Response(output.data, status=status.HTTP_201_CREATED)
+
+    @extend_schema(
+        responses={200: ProductVariantValuesResponseSerializer},
+        summary="Get generated variants for a product",
+        description=(
+            "Returns the product's stored attribute palette and all generated "
+            "variants, including each variant's selected attribute values."
+        ),
+    )
+    def get(self, request, product_id):
+        product = get_object_or_404(Product, pk=product_id)
+        result = ProductVariantValuesService.get_variants(product=product)
+        return Response(ProductVariantValuesResponseSerializer(result).data)
+
+    @extend_schema(
+        request=ProductVariantValuesDeleteRequestSerializer,
+        responses={200: ProductVariantValuesDeleteResponseSerializer},
+        summary="Delete selected generated variants for a product",
+        description=(
+            "Bulk-deletes the generated variants identified by `variantIds`, "
+            "provided they belong to this product, and their "
+            "variant-option links. The product's attribute values and their "
+            "images are preserved. `deletedCount` is the number of variants deleted. "
+            "If any ID is missing or belongs to another product, the request fails "
+            "without deleting any variants."
+        ),
+    )
+    def delete(self, request, product_id):
+        product = get_object_or_404(Product, pk=product_id)
+        input_serializer = ProductVariantValuesDeleteRequestSerializer(data=request.data)
+        input_serializer.is_valid(raise_exception=True)
+        deleted_count = ProductVariantValuesService.delete_variants(
+            product=product, variant_ids=input_serializer.validated_data["variantIds"]
+        )
+        return Response({"deletedCount": deleted_count})
 
     @extend_schema(
         request=ProductVariantValuesPatchSerializer,

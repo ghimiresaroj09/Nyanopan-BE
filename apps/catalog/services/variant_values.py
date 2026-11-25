@@ -33,6 +33,47 @@ from .variants import VariantService
 
 class ProductVariantValuesService:
     @staticmethod
+    def get_variants(*, product: Product) -> dict:
+        """Return the product's stored palette and generated variants."""
+        variants = list(
+            ProductVariant.objects.filter(product=product)
+            .prefetch_related("options__product_attribute_value")
+        )
+        return {
+            "attributes": ProductVariantValuesService._stored_palette(
+                product=product
+            ),
+            "generatedVarients": variants,
+        }
+
+    @staticmethod
+    @transaction.atomic
+    def delete_variants(*, product: Product, variant_ids: list) -> int:
+        """Delete selected variants, preserving the product's palette."""
+        product = Product.objects.select_for_update().get(pk=product.pk)
+        variants = list(
+            ProductVariant.objects.select_for_update()
+            .filter(pk__in=variant_ids)
+            .values_list("pk", "product_id")
+        )
+        found_ids = {variant_id for variant_id, _ in variants}
+        missing_ids = [str(variant_id) for variant_id in variant_ids if variant_id not in found_ids]
+        foreign_ids = [
+            str(variant_id)
+            for variant_id, product_id in variants
+            if product_id != product.pk
+        ]
+        if missing_ids or foreign_ids:
+            errors = {}
+            if missing_ids:
+                errors["notFound"] = missing_ids
+            if foreign_ids:
+                errors["wrongProduct"] = foreign_ids
+            raise ValidationError({"variantIds": errors})
+        ProductVariant.objects.filter(product=product, pk__in=variant_ids).delete()
+        return len(variants)
+
+    @staticmethod
     @transaction.atomic
     def save_variants(
         *, product: Product, attributes: list, generatedVarients: list
