@@ -146,7 +146,9 @@ class Product(TimeStampedModel, SluggedModelMixin):
     )
     name = models.CharField(max_length=200)
     slug = models.SlugField(max_length=220, unique=True, blank=True)
-    model = models.ForeignKey(ProductModel, on_delete=models.PROTECT, related_name="products")
+    model = models.ForeignKey(
+        ProductModel, null=True, blank=True, on_delete=models.PROTECT, related_name="products"
+    )
     gender = models.CharField(max_length=10, choices=Gender.choices, blank=True, null=True, db_index=True)
     usage_location = models.CharField(
         max_length=10,

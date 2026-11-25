@@ -170,6 +170,16 @@ class TestNestedProductAdmin:
             o.product_attribute_value.attribute.name for o in variant.options.all()
         ) == ["Color", "Size"]
 
+    def test_nested_product_create_without_model(self, admin_client, category):
+        response = admin_client.post(
+            "/api/v1/admin/products/",
+            {"name": "Model-free product", "category": str(category.id)},
+            format="json",
+        )
+        data = status_data(response, status_code=201)
+        assert data["model"] is None
+        assert Product.objects.get(pk=data["id"]).model is None
+
     def test_nested_create_failure_leaves_nothing(
         self, admin_client, category, product_model, color_attr, size_attr,
         grey, size_40,

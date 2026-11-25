@@ -506,6 +506,8 @@ class ProductAdminWriteSerializer(serializers.ModelSerializer):
         queryset=ProductModel.objects.all(),
         lookup_field="slug",
         lookup_label="slug",
+        required=False,
+        allow_null=True,
         help_text="Product model UUID or slug.",
     )
     category = FlexibleRelatedField(

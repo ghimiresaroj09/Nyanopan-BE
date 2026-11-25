@@ -313,7 +313,7 @@ function renderDashboard() {
       "<li><span class='gnum'>3</span><span><strong>Product models</strong> — add lines like Celsi; the model name seeds auto SKUs.</span></li>" +
       "<li><span class='gnum'>4</span><span><strong>Attributes</strong> — add facets like Color or Size. Turn on <strong>Requires image</strong> when every value must carry a picture (e.g. Color).</span></li>" +
       "<li><span class='gnum'>5</span><span><strong>Attribute values</strong> — add Grey / Blue under Color, 40 / 41 under Size.</span></li>" +
-      "<li><span class='gnum'>6</span><span><strong>Products</strong> — pick a category + model, attach values (with images where required), then add variants priced in a currency. Watch the live <strong>API payload</strong> preview to see exactly what the backend receives.</span></li>" +
+      "<li><span class='gnum'>6</span><span><strong>Products</strong> — pick a category, optionally choose a model, attach values (with images where required), then add variants priced in a currency. Watch the live <strong>API payload</strong> preview to see exactly what the backend receives.</span></li>" +
     "</ol></div>" +
     '<div class="card"><h2>Recent products</h2>' +
       (DB.products.length
@@ -513,7 +513,7 @@ var slugTouched = false;
 
 function renderProducts() {
   if (productMode === "edit" && editor) return renderEditor();
-  var h = sectionHead(6, "Products", "The final step: pick a category + model, attach attribute values (with images where required), then price variants in a currency.", "add-product", "Add product");
+  var h = sectionHead(6, "Products", "The final step: pick a category, optionally choose a model, attach attribute values (with images where required), then price variants in a currency.", "add-product", "Add product");
   if (!DB.products.length) return h + emptyState("No products yet", "Make sure currencies, a category, a model, attributes and values exist — then add your first product.", "add-product", "Add product");
   var rows = DB.products.map(function (p) {
     var c = byId("categories", p.category_id);
@@ -582,7 +582,7 @@ function renderEditor() {
       '<div class="sub-block"><div class="sub-head"><h3>Basics</h3></div><div class="sub-body"><div class="form-grid">' +
         '<div class="field"><label>Name</label><input type="text" data-draft="name" value="' + esc(d.name) + '" placeholder="Celsi Wool Felt Slippers"></div>' +
         '<div class="field"><label>Slug (auto)</label><input type="text" data-draft="slug" id="edSlug" value="' + esc(d.slug) + '" placeholder="auto from name"></div>' +
-        '<div class="field"><label>Model</label><select data-draft="model_id"><option value="">— Select —</option>' + optList(DB.models, d.model_id, function (m) { return m.name; }) + "</select></div>" +
+        '<div class="field"><label>Model (optional)</label><select data-draft="model_id"><option value="">— None —</option>' + optList(DB.models, d.model_id, function (m) { return m.name; }) + "</select></div>" +
         '<div class="field"><label>Category</label><select data-draft="category_id"><option value="">— Select —</option>' + optList(DB.categories, d.category_id, function (c) { return c.name; }) + "</select></div>" +
         '<div class="field"><label>Gender</label><select data-draft="gender">' + GENDERS.map(function (g) { return '<option' + (d.gender === g ? " selected" : "") + ">" + g + "</option>"; }).join("") + "</select></div>" +
         '<div class="field"><label>Flags</label><div style="display:flex;gap:16px;padding-top:8px">' +
@@ -723,7 +723,6 @@ function validateProduct(d) {
   var issues = [];
   if (!d.name.trim()) issues.push("Name is required.");
   if (!d.category_id || !byId("categories", d.category_id)) issues.push("Pick a category.");
-  if (!d.model_id || !byId("models", d.model_id)) issues.push("Pick a product model.");
   var seenKeys = {}, seenPairs = {};
   d.attribute_values.forEach(function (r, i) {
     var n = "Value " + (i + 1);
