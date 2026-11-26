@@ -23,9 +23,48 @@ class CheckoutInputSerializer(serializers.Serializer):
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
+    product_image = serializers.SerializerMethodField()
+
     class Meta:
         model = OrderItem
-        fields = ["product_name", "variant_name", "sku", "unit_price", "quantity", "line_total"]
+        fields = ["product_name", "product_image", "variant_name", "sku", "unit_price", "quantity", "line_total"]
+
+    def get_product_image(self, item):
+        """Return the catalog product's primary image for this purchased variant."""
+        variant = getattr(item, "variant", None)
+        product = getattr(variant, "product", None)
+        if product is None:
+            return None
+
+        image = product.feature_image
+        image_owner = product
+        if not image or not image.name:
+            # Match catalog primary-image behavior: use a product attribute
+            # value image when the product itself has no featured image.
+            image_owner = (
+                product.attribute_values.filter(
+                    is_active=True,
+                    attribute__is_active=True,
+                    attribute_value__is_active=True,
+                )
+                .exclude(feature_image="")
+                .order_by("-attribute__requires_image", "id")
+                .first()
+            )
+            if image_owner is None or not image_owner.feature_image.name:
+                return None
+            image = image_owner.feature_image
+
+        url = image.url
+        request = self.context.get("request") if self.context else None
+        if url.startswith("/") and request is not None:
+            url = request.build_absolute_uri(url)
+        return {
+            "url": url,
+            "title": image_owner.feature_image_title or "",
+            "caption": image_owner.feature_image_caption or "",
+            "alt": image_owner.feature_image_alt or "",
+        }
 
 
 class OrderSerializer(serializers.ModelSerializer):
