@@ -173,6 +173,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Email delivery (SMTP). Leave EMAIL_HOST empty to use Django's console
 # backend in development; production should set the SMTP environment values.
+EMAIL_BACKEND = env(
+    "EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend"
+)
 EMAIL_HOST = env("EMAIL_HOST", "")
 EMAIL_PORT = env_int("EMAIL_PORT", 587)
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", "")
