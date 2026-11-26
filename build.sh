@@ -58,11 +58,19 @@ echo "==> Running database migrations"
 # Neon's PgBouncer runs in transaction mode and does not support session-level
 # state that schema migrations can rely on. Plain Postgres (no pooler in front)
 # simply needs DATABASE_URL, so the override only applies when it is set.
-if [ -n "${DATABASE_URL_UNPOOLED:-}" ]; then
+case "${DATABASE_URL:-}" in
+  postgres://*|postgresql://*)
+    if [ -n "${DATABASE_URL_UNPOOLED:-}" ]; then
   echo "Running migrations on the direct (unpooled) Neon endpoint."
   DATABASE_URL="$DATABASE_URL_UNPOOLED" python manage.py migrate --no-input
-else
-  python manage.py migrate --no-input
-fi
+    else
+      python manage.py migrate --no-input
+    fi
+    ;;
+  *)
+    # Non-PostgreSQL databases (such as MySQL) use DATABASE_URL directly.
+    python manage.py migrate --no-input
+    ;;
+esac
 
 echo "Build finished: dependencies installed, static files collected, migrations applied."

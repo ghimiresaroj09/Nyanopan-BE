@@ -1,4 +1,4 @@
-"""Production settings: hardened defaults, PostgreSQL expected.
+"""Production settings: hardened defaults, PostgreSQL or MySQL expected.
 
 Targets Render (https://render.com): reads configuration from environment
 variables, trusts the platform's TLS-terminating proxy, serves static files
@@ -47,8 +47,7 @@ if not _is_build_phase:
         )
 
 if DATABASES["default"]["ENGINE"] == "django.db.backends.sqlite3":
-    raise ImproperlyConfigured("PostgreSQL (DATABASE_URL) is required in production.")
-    raise ImproperlyConfigured("PostgreSQL (DATABASE_URL) is required in production.")
+    raise ImproperlyConfigured("A PostgreSQL or MySQL DATABASE_URL is required in production.")
 
 # Reuse connections between requests, but verify them first: Neon suspends idle
 # computes and closes pooled connections, so a stale handle would otherwise
