@@ -14,7 +14,7 @@ Public endpoints are read-only and return published blogs only.
 | GET | `/api/v1/blog-categories/` | List categories with published blog counts |
 | GET | `/api/v1/blog-categories/{id}/` | Retrieve a category and its blog count |
 | GET | `/api/v1/blogs/` | List published blogs |
-| GET | `/api/v1/blogs/{id}/` | Retrieve a published blog; increments its view count |
+| GET | `/api/v1/blogs/{slug}/` | Retrieve a published blog by slug; increments its view count |
 
 Blog list filters:
 
@@ -27,7 +27,7 @@ Blog list filters:
 | `ordering=views` or `ordering=-views` | Order by view count |
 | `ordering=created_at` or `ordering=-created_at` | Order by date |
 
-Public responses contain the article fields, image metadata (`image_title`,
+Public responses include the slug used for detail lookup. They contain the article fields, image metadata (`image_title`,
 `image_alt`, `image_caption`), and SEO metadata: `slug`, `excerpt`,
 `meta_title`, `meta_description`, `meta_keywords`, `canonical_url`, `meta_robots`,
 `og_title`, `og_description`, `og_url`, `og_image`, `twitter_card`, `twitter_title`,

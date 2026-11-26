@@ -681,6 +681,7 @@ class FAQAdminViewSet(SuccessEnvelopeMixin, ModelViewSet):
 )
 class BlogPublicViewSet(SuccessEnvelopeMixin, ReadOnlyModelViewSet):
     serializer_class = BlogPublicSerializer
+    lookup_field = "slug"
     permission_classes = []
     authentication_classes = []
     filter_backends = [DjangoFilterBackend, OrderingFilter]
@@ -693,9 +694,7 @@ class BlogPublicViewSet(SuccessEnvelopeMixin, ReadOnlyModelViewSet):
         return Blog.objects.filter(is_published=True).select_related("category")
 
     def retrieve(self, request, *args, **kwargs):
-        from django.shortcuts import get_object_or_404
-
-        blog = get_object_or_404(self.filter_queryset(self.get_queryset()), pk=kwargs["pk"])
+        blog = self.get_object()
         Blog.objects.filter(pk=blog.pk).update(views=F("views") + 1)
         blog.refresh_from_db(fields=["views"])
         serializer = self.get_serializer(blog)
