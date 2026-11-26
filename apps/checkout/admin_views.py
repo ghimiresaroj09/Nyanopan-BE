@@ -10,6 +10,7 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from apps.common.permissions import IsAdminUser
 from apps.common.responses import SuccessEnvelopeMixin
+from apps.common.pagination import paginate_list_or_return
 
 from .models import DeliveryLocation, Order, OrderStatusEvent
 from .emails import send_order_status_email
@@ -105,7 +106,12 @@ class AdminOrderViewSet(SuccessEnvelopeMixin, ReadOnlyModelViewSet):
     def status_timeline(self, request, pk=None):
         order = get_object_or_404(Order.objects.select_for_update(), pk=pk)
         events = order.status_timeline.select_related("changed_by").all()
-        return Response(OrderStatusEventSerializer(events, many=True).data)
+        return paginate_list_or_return(
+            request,
+            events,
+            OrderStatusEventSerializer,
+            {"request": request},
+        )
 
     @action(detail=True, methods=["patch"], url_path="status")
     @extend_schema(request=AdminOrderStatusUpdateSerializer, responses={200: OrderSerializer})

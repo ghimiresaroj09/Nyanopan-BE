@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 
 from apps.catalog.models import ProductVariant
 from apps.common.responses import SuccessEnvelopeMixin
+from apps.common.pagination import paginate_list_or_return
 
 from .emails import send_new_order_emails
 from .models import DeliveryLocation, Order, OrderItem, OrderStatusEvent
@@ -132,4 +133,6 @@ class DeliveryLocationListView(SuccessEnvelopeMixin, APIView):
 
     def get(self, request):
         locations = DeliveryLocation.objects.filter(is_active=True)
-        return Response(DeliveryLocationSerializer(locations, many=True).data)
+        return paginate_list_or_return(
+            request, locations, DeliveryLocationSerializer, {"request": request}
+        )
