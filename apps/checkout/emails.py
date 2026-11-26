@@ -21,10 +21,11 @@ def _send_order_email(*, subject, message, recipients):
     if not recipients:
         logger.warning("Order email '%s' skipped because no recipient is configured", subject)
         return
-    sender = getattr(settings, "DEFAULT_FROM_EMAIL", "")
-    if not sender:
-        config = _site_configuration()
-        sender = config.email if config and config.email else None
+    config = _site_configuration()
+    sender = (
+        config.email if config and config.email
+        else getattr(settings, "DEFAULT_FROM_EMAIL", "")
+    )
     if not sender:
         logger.warning("Order email '%s' skipped because DEFAULT_FROM_EMAIL is unset", subject)
         return
