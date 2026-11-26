@@ -86,6 +86,7 @@ INSTALLED_APPS = [
     "apps.common",
     "apps.accounts",
     "apps.catalog",
+    "apps.checkout",
     "apps.cms",
 ]
 
@@ -202,6 +203,12 @@ SIMPLE_JWT = {
 
 
 # ---------------------------------------------------------------------------
+# Store settings
+# ---------------------------------------------------------------------------
+STORE_CURRENCY = "NPR"
+
+
+# ---------------------------------------------------------------------------
 # API documentation (drf-spectacular)
 # ---------------------------------------------------------------------------
 SPECTACULAR_SETTINGS = {
@@ -226,6 +233,11 @@ SPECTACULAR_SETTINGS = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "TAGS": [
+        {"name": "Public - Cart"},
+        {"name": "Public - Checkout"},
+        {"name": "Admin - Orders"},
+        {"name": "Admin - Delivery Locations"},
+        {"name": "Public - Delivery"},
         {"name": "Public - Categories"},
         {"name": "Public - Products"},
         {"name": "Public - Product Models"},

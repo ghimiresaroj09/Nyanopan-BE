@@ -1,12 +1,12 @@
 # Ecommerce Shop — Backend
 
 Django + Django REST Framework backend for a modern ecommerce/shop website with a
-**public catalog** and a **WhatsApp-based checkout on the frontend**.
+**public catalog** and order submission; the frontend can
+continue from the resulting order to WhatsApp.
 
-The backend provides catalog data and admin management only. It intentionally does
-**not** implement customer authentication, carts, checkout, orders, payments,
-inventory, or WhatsApp messaging — the frontend owns the entire shopping
-experience and redirects the shopper to WhatsApp with the selected variants.
+The backend provides public catalog data, admin management, and order
+submission. The frontend stores cart items locally. It does not implement customer authentication, payments,
+inventory, or WhatsApp messaging.
 
 ## Technology stack
 
@@ -271,9 +271,58 @@ filters (`?category=slippers&gender=UNISEX&is_featured=true&min_price=&max_price
 and sorting (`?ordering=price|-price|-created_at|name`).
 
 The detail response groups attribute values (with color images) and lists every
-variant with its price/special-edition flag plus
-`product_attribute_value` ids per option — the frontend matches the shopper's
-selection against these ids to find the SKU, then checks out via WhatsApp.
+variant with its price/special-edition flag plus `product_attribute_value` ids
+per option. The frontend matches the shopper's selection against these ids to
+find the SKU and stores the selection in the frontend cart before submitting checkout.
+
+### Checkout (public)
+
+```text
+POST   /api/v1/checkout/                # items + contact, optional company, and delivery address fields
+GET    /api/v1/delivery-locations/      # active locations and effective delivery charges
+```
+
+Checkout accepts the frontend's locally stored cart items. Only `variantId` and
+`quantity` are used; names and prices from the browser are ignored. Required
+fields are `customer_name`, `email`, `phone`, `delivery_location_id`, and `address`.
+Optional fields are `alternate_phone`, `notes`, `company_name`, `pan_vat_number`,
+and `landmark`. It creates a pending order and snapshots current variant prices
+and item details. The server looks up the selected active delivery location,
+adds its effective charge (zero when `is_free` is true), and stores the delivery
+location and charge on the order. Order totals use NPR. No payment, stock reservation, or
+WhatsApp message is performed by this API.
+
+Staff can manage delivery locations at `/api/v1/admin/delivery-locations/`
+using standard list/retrieve/create/update/delete operations. Each location has
+`name`, `delivery_charge`, `is_free`, and `is_active` fields. The public
+`GET /api/v1/delivery-locations/` endpoint returns active locations for the
+checkout city/district selector.
+
+### Admin order management (staff only)
+
+```text
+GET   /api/v1/admin/orders/                  # paginated list; ?status=PENDING&search=...
+GET   /api/v1/admin/orders/{order_id}/       # order, line items, and status timeline
+GET   /api/v1/admin/orders/{order_id}/timeline/
+PATCH /api/v1/admin/orders/{order_id}/status/ # {"status":"CONFIRMED", "note":"..."}
+PATCH /api/v1/admin/orders/{order_id}/delivery/ # {"delivery_location_id":"<uuid>"}
+```
+
+Status updates accept `PENDING`, `CONFIRMED`, `PROCESSING`, `SHIPPED`,
+`DELIVERED`, or `CANCELLED`. Each checkout and status change appends a
+timeline entry with the timestamp, previous and new status, note, and (for
+admin changes) the staff user's name. The order response includes the chosen
+delivery location, its saved delivery charge, and the recalculated total. Admins
+can change the delivery location; its current configured fee is applied, or zero
+when it is free. These endpoints require the same staff JWT or session
+authentication as other admin APIs.
+
+Order emails use Django's configured email backend. Customers receive an order
+confirmation and status-change notices. The primary contact email in Site
+Configuration receives new-order and status-change notices. Messages include
+customer, delivery, item, product subtotal, delivery charge, total, and business
+contact details from Site Configuration. Configure `DEFAULT_FROM_EMAIL` and
+Django's mail backend/SMTP settings to deliver messages.
 
 ### Admin auth (staff users only, JWT)
 
@@ -641,7 +690,6 @@ gunicorn config.wsgi:application -c gunicorn.conf.py
 
 ## Deliberately out of scope
 
-Customer auth/accounts, carts, checkout, orders, payments, inventory/stock,
-shipping, coupons, wishlists, and WhatsApp API integration are **not** part of
-this backend — the frontend handles selection → cart → WhatsApp. Prices sent by
-any future order flow must always be re-validated server-side.
+Customer auth/accounts, server-side carts, payments, inventory/stock, shipping,
+coupons, wishlists, and WhatsApp API integration are **not** part of this backend.
+Checkout prices are always read and re-validated server-side.
