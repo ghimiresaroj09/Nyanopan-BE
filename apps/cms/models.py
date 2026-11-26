@@ -914,6 +914,7 @@ class Blog(TimeStampedModel):
         related_name="blogs",
     )
     image = models.ImageField(
+        max_length=500,
         upload_to=blog_image_path,
         storage=image_storage,
         validators=[validate_image_upload],
@@ -936,6 +937,7 @@ class Blog(TimeStampedModel):
     og_description = models.CharField(max_length=320, blank=True, default="")
     og_url = models.URLField(max_length=500, blank=True, default="")
     og_image = models.ImageField(
+        max_length=500,
         upload_to=blog_image_path,
         storage=image_storage,
         validators=[validate_image_upload],
@@ -949,6 +951,7 @@ class Blog(TimeStampedModel):
     twitter_title = models.CharField(max_length=255, blank=True, default="")
     twitter_description = models.CharField(max_length=320, blank=True, default="")
     twitter_image = models.ImageField(
+        max_length=500,
         upload_to=blog_image_path,
         storage=image_storage,
         validators=[validate_image_upload],

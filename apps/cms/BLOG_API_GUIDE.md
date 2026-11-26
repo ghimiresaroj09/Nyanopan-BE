@@ -1,6 +1,8 @@
 # Blog API
 
-Blog content supports multipart image uploads. The `content` field stores the
+Blog images accept either uploaded files or existing HTTP(S) image URLs. For
+uploads, send `multipart/form-data`; for an existing Cloudinary image URL, JSON
+or multipart input is accepted. The `content` field stores the
 HTML produced by the rich-text editor, similar to the existing policy content.
 Tags may be sent as a JSON array or as comma-separated text in multipart forms.
 SEO fields are editable on the admin API and returned with public blogs.
@@ -57,7 +59,7 @@ Create a blog with `multipart/form-data` fields:
 ```text
 title: Caring for wool felt
 category: <category UUID>
-image: <image file>
+image: <image file or existing Cloudinary URL>
 image_title: Wool felt slippers
 image_alt: Handcrafted wool felt slippers in natural cream
 image_caption: Our slippers are made from locally sourced wool.

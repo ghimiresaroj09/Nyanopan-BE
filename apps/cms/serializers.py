@@ -1,8 +1,11 @@
 """CMS serializers."""
 
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.validators import URLValidator
 from rest_framework import serializers
 from django.utils.html import strip_tags
 
+from apps.common.validators import validate_image_upload
 from .models import Blog, BlogCategory, FAQ, FAQCategory, SiteConfiguration
 
 
@@ -943,6 +946,37 @@ class FAQCategoryPublicSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "faqs"]
 
 
+class BlogImageField(serializers.ImageField):
+    """Accept either an uploaded image or an existing HTTP(S) image URL."""
+
+    default_error_messages = {
+        **serializers.ImageField.default_error_messages,
+        "invalid_url": "Provide a valid HTTP or HTTPS image URL.",
+    }
+
+    def to_internal_value(self, data):
+        if isinstance(data, str):
+            value = data.strip()
+            if not value:
+                if self.allow_null:
+                    return None
+                self.fail("invalid")
+            try:
+                URLValidator(schemes=["http", "https"])(value)
+            except DjangoValidationError:
+                self.fail("invalid_url")
+            return value
+        return super().to_internal_value(data)
+
+    def to_representation(self, value):
+        if not value:
+            return None if self.allow_null else ""
+        name = value if isinstance(value, str) else getattr(value, "name", "")
+        if name.startswith(("http://", "https://")):
+            return name
+        return super().to_representation(value)
+
+
 class BlogTagsField(serializers.Field):
     """Accept JSON arrays or comma-separated tags from multipart forms."""
 
@@ -1001,6 +1035,9 @@ class BlogCategoryPublicSerializer(serializers.ModelSerializer):
 
 
 class BlogSerializer(serializers.ModelSerializer):
+    image = BlogImageField(validators=[validate_image_upload])
+    og_image = BlogImageField(required=False, allow_null=True, validators=[validate_image_upload])
+    twitter_image = BlogImageField(required=False, allow_null=True, validators=[validate_image_upload])
     tags = BlogTagsField(required=False, default=list)
     meta_keywords = BlogTagsField(required=False, default=list)
     category_name = serializers.CharField(source="category.name", read_only=True)
@@ -1020,6 +1057,7 @@ class BlogSerializer(serializers.ModelSerializer):
 
 
 class BlogPublicSerializer(serializers.ModelSerializer):
+    image = BlogImageField(read_only=True)
     category_name = serializers.CharField(source="category.name", read_only=True)
     meta_title = serializers.SerializerMethodField()
     meta_description = serializers.SerializerMethodField()
@@ -1082,6 +1120,9 @@ class BlogPublicSerializer(serializers.ModelSerializer):
     def _image_url(self, image):
         if not image:
             return ""
+        name = image if isinstance(image, str) else getattr(image, "name", "")
+        if name.startswith(("http://", "https://")):
+            return name
         try:
             url = image.url
         except (ValueError, OSError):
