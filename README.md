@@ -467,7 +467,7 @@ pasting a few secrets:
 
 | File | Purpose |
 | --- | --- |
-| `render.yaml` | Blueprint: web service, env wiring, health check |
+| `render.yaml` | Blueprint: web service, env wiring, health check, deploy on each linked-branch commit |
 | `build.sh` | Build command: install deps → `collectstatic` → `migrate` |
 | `gunicorn.conf.py` | Binds `$PORT`, gthread workers, access/error logs to stdout |
 | `.python-version` | Pins Python 3.13 (Render's default is 3.14) |
