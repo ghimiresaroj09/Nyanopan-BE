@@ -317,9 +317,11 @@ can change the delivery location; its current configured fee is applied, or zero
 when it is free. These endpoints require the same staff JWT or session
 authentication as other admin APIs.
 
-Order emails use Django's configured email backend. Customers receive an order
-confirmation and status-change notices. The primary contact email in Site
-Configuration receives new-order and status-change notices. Messages include
+Order emails use Django's configured email backend and HTML templates in
+`apps/checkout/templates/checkout/emails/`. Customers receive a styled order
+confirmation and status updates with copy and subject lines tailored to each
+status. The primary contact email in Site Configuration receives a separate
+styled new-order alert only. Messages include
 customer, delivery, item, product subtotal, delivery charge, total, and business
 contact details from Site Configuration. Configure `DEFAULT_FROM_EMAIL` and
 Django's mail backend/SMTP settings to deliver messages.

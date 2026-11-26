@@ -1,8 +1,11 @@
 """CMS views for site configuration and policies."""
 
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Count, F, Q
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import status
+from rest_framework.exceptions import APIException
+from rest_framework.filters import OrderingFilter
 from rest_framework.generics import GenericAPIView, RetrieveAPIView, RetrieveUpdateAPIView, CreateAPIView, ListAPIView
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAdminUser
@@ -15,10 +18,15 @@ from .models import (
     OurMakers,
     OurStory,
     OurSustainability,
+    FAQ,
+    FAQCategory,
+    Blog,
+    BlogCategory,
     Policy,
     SiteConfiguration,
     TeamMember,
 )
+from .emails import send_contact_admin_notification, send_contact_reply
 from .serializers import (
     OurMakersPublicSerializer,
     OurMakersSerializer,
@@ -28,10 +36,19 @@ from .serializers import (
     OurSustainabilitySerializer,
     PolicyPublicSerializer,
     PolicySerializer,
+    FAQSerializer,
+    FAQPublicSerializer,
+    FAQCategorySerializer,
+    FAQCategoryPublicSerializer,
+    BlogSerializer,
+    BlogPublicSerializer,
+    BlogCategorySerializer,
+    BlogCategoryPublicSerializer,
     SiteConfigurationPublicSerializer,
     SiteConfigurationSerializer,
     TeamMemberSerializer,
 )
+from .filters import BlogFilter
 
 
 @extend_schema(
@@ -457,10 +474,13 @@ class SubscriptionAdminListView(SuccessEnvelopeMixin, ListAPIView):
 
 from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
 
-from .models import ContactMessage
+from .models import ContactMessage, ContactMessageReply
 from .serializers import (
     ContactMessageCreateSerializer,
+    ContactMessageDetailSerializer,
     ContactMessageSerializer,
+    ContactMessageReplyHistorySerializer,
+    ContactMessageReplySerializer,
     ContactMessageUpdateSerializer,
 )
 
@@ -486,6 +506,7 @@ class ContactUsPublicView(SuccessEnvelopeMixin, CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
+        send_contact_admin_notification(instance)
         
         # Return full message data
         response_serializer = ContactMessageSerializer(instance)
@@ -518,7 +539,7 @@ class ContactMessageAdminDetailView(SuccessEnvelopeMixin, RetrieveUpdateAPIView)
     """Admin endpoint to view and update contact message."""
     
     permission_classes = [IsAdminUser]
-    queryset = ContactMessage.objects.all()
+    queryset = ContactMessage.objects.prefetch_related("replies__sent_by")
     
     def get_success_message(self, request=None):
         if request and request.method in ['PUT', 'PATCH']:
@@ -528,4 +549,212 @@ class ContactMessageAdminDetailView(SuccessEnvelopeMixin, RetrieveUpdateAPIView)
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:
             return ContactMessageUpdateSerializer
+        if self.request.method == 'GET':
+            return ContactMessageDetailSerializer
         return ContactMessageSerializer
+
+
+@extend_schema(
+    tags=["Admin - Contact Messages"],
+    description=(
+        "Send a reply to the email address submitted with this contact message. "
+        "Admin access only."
+    ),
+    request=ContactMessageReplySerializer,
+)
+class ContactMessageAdminReplyView(SuccessEnvelopeMixin, GenericAPIView):
+    """Email an admin's reply to the contact message sender."""
+
+    permission_classes = [IsAdminUser]
+    serializer_class = ContactMessageReplySerializer
+
+    def post(self, request, pk):
+        from django.shortcuts import get_object_or_404
+
+        message = get_object_or_404(ContactMessage, pk=pk)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        reply_text = serializer.validated_data["reply"]
+        if not send_contact_reply(message, reply_text):
+            error = APIException(
+                "Unable to send the reply email. Check the email configuration and try again.",
+                code="contact_reply_delivery_failed",
+            )
+            error.status_code = status.HTTP_502_BAD_GATEWAY
+            raise error
+
+        original_subject = " ".join(message.subject.splitlines()).strip()
+        subject = (
+            original_subject
+            if original_subject.lower().startswith("re:")
+            else f"Re: {original_subject}"
+        )
+        ContactMessageReply.objects.create(
+            contact_message=message,
+            reply=reply_text,
+            subject=subject,
+            sent_by=request.user,
+        )
+        return Response(
+            {"id": message.pk, "email": message.email, "subject": subject},
+            status=status.HTTP_200_OK,
+        )
+
+
+@extend_schema(
+    auth=[],
+    tags=["Public - FAQs"],
+    description="List FAQ categories with their questions and answers. No authentication required.",
+)
+class FAQCategoryPublicViewSet(SuccessEnvelopeMixin, ReadOnlyModelViewSet):
+    serializer_class = FAQCategoryPublicSerializer
+    permission_classes = []
+    authentication_classes = []
+    success_message = "FAQ categories retrieved successfully."
+
+    def get_queryset(self):
+        return FAQCategory.objects.prefetch_related("faqs").all()
+
+
+@extend_schema(
+    auth=[],
+    tags=["Public - FAQs"],
+    description="List or retrieve frequently asked questions. No authentication required.",
+)
+class FAQPublicViewSet(SuccessEnvelopeMixin, ReadOnlyModelViewSet):
+    serializer_class = FAQPublicSerializer
+    permission_classes = []
+    authentication_classes = []
+    success_message = "FAQs retrieved successfully."
+
+    def get_queryset(self):
+        queryset = FAQ.objects.select_related("category").all()
+        category_id = self.request.query_params.get("category")
+        if category_id:
+            queryset = queryset.filter(category_id=category_id)
+        return queryset
+
+
+@extend_schema(tags=["Admin - FAQs"], description="Manage FAQ categories. Admin access only.")
+class FAQCategoryAdminViewSet(SuccessEnvelopeMixin, ModelViewSet):
+    serializer_class = FAQCategorySerializer
+    permission_classes = [IsAdminUser]
+    queryset = FAQCategory.objects.all()
+
+    def get_success_message(self, request=None):
+        if request and request.method == "POST":
+            return "FAQ category created successfully."
+        if request and request.method in ["PUT", "PATCH"]:
+            return "FAQ category updated successfully."
+        if request and request.method == "DELETE":
+            return "FAQ category deleted successfully."
+        return "FAQ category retrieved successfully."
+
+
+@extend_schema(tags=["Admin - FAQs"], description="Manage FAQs. Admin access only.")
+class FAQAdminViewSet(SuccessEnvelopeMixin, ModelViewSet):
+    serializer_class = FAQSerializer
+    permission_classes = [IsAdminUser]
+    queryset = FAQ.objects.select_related("category").all()
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["category"]
+
+    def get_success_message(self, request=None):
+        if request and request.method == "POST":
+            return "FAQ created successfully."
+        if request and request.method in ["PUT", "PATCH"]:
+            return "FAQ updated successfully."
+        if request and request.method == "DELETE":
+            return "FAQ deleted successfully."
+        return "FAQ retrieved successfully."
+
+
+@extend_schema(
+    auth=[],
+    tags=["Public - Blogs"],
+    description=(
+        "List and retrieve published blogs. Filter with category, min_views, "
+        "max_views, and is_featured; order by views, title, or created_at. "
+        "Retrieving a blog detail increments its view count."
+    ),
+)
+class BlogPublicViewSet(SuccessEnvelopeMixin, ReadOnlyModelViewSet):
+    serializer_class = BlogPublicSerializer
+    permission_classes = []
+    authentication_classes = []
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_class = BlogFilter
+    ordering_fields = ["views", "title", "created_at"]
+    ordering = ["-created_at"]
+    success_message = "Blogs retrieved successfully."
+
+    def get_queryset(self):
+        return Blog.objects.filter(is_published=True).select_related("category")
+
+    def retrieve(self, request, *args, **kwargs):
+        from django.shortcuts import get_object_or_404
+
+        blog = get_object_or_404(self.filter_queryset(self.get_queryset()), pk=kwargs["pk"])
+        Blog.objects.filter(pk=blog.pk).update(views=F("views") + 1)
+        blog.refresh_from_db(fields=["views"])
+        serializer = self.get_serializer(blog)
+        return Response(serializer.data)
+
+
+@extend_schema(tags=["Admin - Blogs"], description="Manage blog categories. Admin access only.")
+class BlogCategoryAdminViewSet(SuccessEnvelopeMixin, ModelViewSet):
+    serializer_class = BlogCategorySerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return BlogCategory.objects.annotate(blogs_count=Count("blogs")).all()
+
+    def get_success_message(self, request=None):
+        if request and request.method == "POST":
+            return "Blog category created successfully."
+        if request and request.method in ["PUT", "PATCH"]:
+            return "Blog category updated successfully."
+        if request and request.method == "DELETE":
+            return "Blog category deleted successfully."
+        return "Blog categories retrieved successfully."
+
+
+@extend_schema(tags=["Admin - Blogs"], description="Manage blogs. Admin access only.")
+class BlogAdminViewSet(SuccessEnvelopeMixin, ModelViewSet):
+    serializer_class = BlogSerializer
+    permission_classes = [IsAdminUser]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_class = BlogFilter
+    ordering_fields = ["views", "title", "created_at", "updated_at"]
+    ordering = ["-created_at"]
+
+    def get_queryset(self):
+        return Blog.objects.select_related("category").all()
+
+    def get_success_message(self, request=None):
+        if request and request.method == "POST":
+            return "Blog created successfully."
+        if request and request.method in ["PUT", "PATCH"]:
+            return "Blog updated successfully."
+        if request and request.method == "DELETE":
+            return "Blog deleted successfully."
+        return "Blogs retrieved successfully."
+
+
+@extend_schema(
+    auth=[],
+    tags=["Public - Blogs"],
+    description="List blog categories with counts of their published blogs.",
+)
+class BlogCategoryPublicViewSet(SuccessEnvelopeMixin, ReadOnlyModelViewSet):
+    serializer_class = BlogCategoryPublicSerializer
+    permission_classes = []
+    authentication_classes = []
+    success_message = "Blog categories retrieved successfully."
+
+    def get_queryset(self):
+        return BlogCategory.objects.annotate(
+            blogs_count=Count("blogs", filter=Q(blogs__is_published=True))
+        ).all()

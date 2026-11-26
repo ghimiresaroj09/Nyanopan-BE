@@ -1,8 +1,9 @@
 """CMS serializers."""
 
 from rest_framework import serializers
+from django.utils.html import strip_tags
 
-from .models import SiteConfiguration
+from .models import Blog, BlogCategory, FAQ, FAQCategory, SiteConfiguration
 
 
 class SocialMediaLinksSerializer(serializers.Serializer):
@@ -820,7 +821,7 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
 # CONTACT US SERIALIZERS
 # ============================================================================
 
-from .models import ContactMessage
+from .models import ContactMessage, ContactMessageReply
 
 
 class ContactMessageCreateSerializer(serializers.ModelSerializer):
@@ -863,6 +864,21 @@ class ContactMessageSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at']
 
 
+
+class ContactMessageDetailSerializer(ContactMessageSerializer):
+    """Contact message detail including its sent reply history."""
+
+    replies = serializers.SerializerMethodField()
+
+    class Meta(ContactMessageSerializer.Meta):
+        fields = ContactMessageSerializer.Meta.fields + ['replies']
+
+    def get_replies(self, instance):
+        return ContactMessageReplyHistorySerializer(
+            instance.replies.all(), many=True
+        ).data
+
+
 class ContactMessageUpdateSerializer(serializers.ModelSerializer):
     """Admin update serializer for status and notes."""
     
@@ -872,3 +888,201 @@ class ContactMessageUpdateSerializer(serializers.ModelSerializer):
             'status',
             'admin_notes',
         ]
+
+
+class ContactMessageReplySerializer(serializers.Serializer):
+    """Admin-authored reply to a contact form submission."""
+
+    reply = serializers.CharField(trim_whitespace=True, min_length=1)
+
+
+class ContactMessageReplyHistorySerializer(serializers.ModelSerializer):
+    """Read-only audit entry for a sent contact reply."""
+
+    sent_by_email = serializers.CharField(
+        source="sent_by.email", read_only=True, allow_null=True, default=None
+    )
+
+    class Meta:
+        model = ContactMessageReply
+        fields = ["id", "reply", "subject", "sent_at", "sent_by_email"]
+        read_only_fields = fields
+
+
+class FAQSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FAQ
+        fields = ["id", "category", "question", "answer", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+
+class FAQPublicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FAQ
+        fields = ["id", "category", "question", "answer"]
+
+
+class FAQInCategoryPublicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FAQ
+        fields = ["id", "question", "answer"]
+
+
+class FAQCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FAQCategory
+        fields = ["id", "name", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+
+class FAQCategoryPublicSerializer(serializers.ModelSerializer):
+    faqs = FAQInCategoryPublicSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = FAQCategory
+        fields = ["id", "name", "faqs"]
+
+
+class BlogTagsField(serializers.Field):
+    """Accept JSON arrays or comma-separated tags from multipart forms."""
+
+    default_error_messages = {"invalid": "Tags must be a list of text values."}
+
+    def get_value(self, dictionary):
+        if hasattr(dictionary, "getlist"):
+            values = dictionary.getlist(self.field_name)
+            if len(values) > 1:
+                return values
+        return super().get_value(dictionary)
+
+    def to_internal_value(self, data):
+        if isinstance(data, str):
+            import json
+
+            try:
+                data = json.loads(data)
+            except (TypeError, ValueError):
+                data = data.split(",")
+        if not isinstance(data, (list, tuple)) or not all(
+            isinstance(tag, str) for tag in data
+        ):
+            self.fail("invalid")
+        return [tag.strip() for tag in data if tag.strip()]
+
+    def to_representation(self, value):
+        return value or []
+
+
+class BlogCategorySerializer(serializers.ModelSerializer):
+    blogs_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BlogCategory
+        fields = ["id", "name", "blogs_count", "created_at", "updated_at"]
+        read_only_fields = ["id", "blogs_count", "created_at", "updated_at"]
+
+    def get_blogs_count(self, instance):
+        if hasattr(instance, "blogs_count"):
+            return instance.blogs_count
+        return instance.blogs.count()
+
+
+class BlogCategoryPublicSerializer(serializers.ModelSerializer):
+    blogs_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BlogCategory
+        fields = ["id", "name", "blogs_count"]
+
+    def get_blogs_count(self, instance):
+        if hasattr(instance, "blogs_count"):
+            return instance.blogs_count
+        return instance.blogs.filter(is_published=True).count()
+
+
+class BlogSerializer(serializers.ModelSerializer):
+    tags = BlogTagsField(required=False, default=list)
+    meta_keywords = BlogTagsField(required=False, default=list)
+    category_name = serializers.CharField(source="category.name", read_only=True)
+    views = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Blog
+        fields = [
+            "id", "title", "slug", "excerpt", "category", "category_name",
+            "image", "content", "tags", "is_featured", "is_published", "views",
+            "meta_title", "meta_description", "meta_keywords", "canonical_url",
+            "meta_robots", "og_title", "og_description", "og_url", "og_image", "twitter_card",
+            "twitter_title", "twitter_description", "twitter_image", "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "views", "created_at", "updated_at"]
+
+
+class BlogPublicSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source="category.name", read_only=True)
+    meta_title = serializers.SerializerMethodField()
+    meta_description = serializers.SerializerMethodField()
+    meta_keywords = serializers.SerializerMethodField()
+    og_title = serializers.SerializerMethodField()
+    og_description = serializers.SerializerMethodField()
+    og_url = serializers.SerializerMethodField()
+    og_image = serializers.SerializerMethodField()
+    twitter_title = serializers.SerializerMethodField()
+    twitter_description = serializers.SerializerMethodField()
+    twitter_image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Blog
+        fields = [
+            "id", "title", "slug", "excerpt", "category", "category_name", "image",
+            "content", "tags", "is_featured", "views", "created_at", "meta_title",
+            "meta_description", "meta_keywords", "canonical_url", "meta_robots",
+            "og_title", "og_description", "og_url", "og_image", "twitter_card", "twitter_title",
+            "twitter_description", "twitter_image",
+        ]
+
+    def get_meta_title(self, blog):
+        return blog.meta_title or blog.title
+
+    def get_meta_description(self, blog):
+        return blog.meta_description or blog.excerpt or self._content_summary(blog)
+
+    def get_meta_keywords(self, blog):
+        return blog.meta_keywords or blog.tags or []
+
+    def get_og_title(self, blog):
+        return blog.og_title or blog.meta_title or blog.title
+
+    def get_og_description(self, blog):
+        return blog.og_description or blog.meta_description or blog.excerpt or self._content_summary(blog)
+
+    def get_og_url(self, blog):
+        return blog.og_url or blog.canonical_url
+
+    def get_og_image(self, blog):
+        return self._image_url(blog.og_image or blog.image)
+
+    def get_twitter_title(self, blog):
+        return blog.twitter_title or blog.og_title or blog.meta_title or blog.title
+
+    def get_twitter_description(self, blog):
+        return (
+            blog.twitter_description or blog.og_description or blog.meta_description
+            or blog.excerpt or self._content_summary(blog)
+        )
+
+    def get_twitter_image(self, blog):
+        return self._image_url(blog.twitter_image or blog.og_image or blog.image)
+
+    def _content_summary(self, blog):
+        return " ".join(strip_tags(blog.content).split())[:320]
+
+    def _image_url(self, image):
+        if not image:
+            return ""
+        try:
+            url = image.url
+        except (ValueError, OSError):
+            return ""
+        request = self.context.get("request")
+        return request.build_absolute_uri(url) if request else url

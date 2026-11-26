@@ -65,6 +65,10 @@ Content-Type: application/json
 }
 ```
 
+The configured Site Configuration email also receives a branded HTML
+notification with the sender's contact details and message. Reply to that email
+directly to reach the sender, or use the admin reply endpoint below.
+
 **Error - Validation (400 Bad Request):**
 ```json
 {
@@ -152,9 +156,36 @@ Returns only messages with NEW status.
 GET    /api/v1/admin/contact-messages/{id}/
 PATCH  /api/v1/admin/contact-messages/{id}/
 PUT    /api/v1/admin/contact-messages/{id}/
+POST   /api/v1/admin/contact-messages/{id}/reply/
 ```
 
 **Authentication:** Required (Admin only)
+
+### POST - Reply to the message by email
+
+Send a JSON body containing the reply text. The reply is emailed to the
+address stored on the contact message, with a `Re:` subject based on the
+original inquiry.
+
+**Request:**
+```json
+{
+  "reply": "Thanks for reaching out. We would be happy to help with your inquiry."
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Action successful.",
+  "data": {
+    "id": "uuid",
+    "email": "john@example.com",
+    "subject": "Re: Product Inquiry"
+  }
+}
+```
 
 ### GET - View Single Message
 
@@ -172,11 +203,23 @@ PUT    /api/v1/admin/contact-messages/{id}/
     "message": "Full message content here...",
     "status": "NEW",
     "admin_notes": "",
+    "replies": [
+      {
+        "id": "reply-uuid",
+        "reply": "Thanks for reaching out. We would be happy to help.",
+        "subject": "Re: Product Inquiry",
+        "sent_at": "2024-01-15T11:00:00Z",
+        "sent_by_email": "admin@example.com"
+      }
+    ],
     "created_at": "2024-01-15T10:30:00Z",
     "updated_at": "2024-01-15T10:30:00Z"
   }
 }
 ```
+
+The `replies` array contains sent replies in chronological order, including
+the reply text and send time. It is empty until an admin reply is sent.
 
 ### PATCH - Update Status/Notes
 
@@ -632,6 +675,7 @@ CREATE INDEX idx_contact_message_email ON cms_contact_message(email);
 | GET | `/api/v1/admin/contact-messages/` | Admin | List all messages |
 | GET | `/api/v1/admin/contact-messages/{id}/` | Admin | View single message |
 | PATCH | `/api/v1/admin/contact-messages/{id}/` | Admin | Update status/notes |
+| POST | `/api/v1/admin/contact-messages/{id}/reply/` | Admin | Email a reply to the sender |
 
 ### Key Features
 ✅ Public contact form (no auth)  

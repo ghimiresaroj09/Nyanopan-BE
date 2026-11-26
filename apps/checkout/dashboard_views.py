@@ -12,7 +12,6 @@ from rest_framework.views import APIView
 from apps.catalog.models import Category, Product, ProductVariant
 from apps.common.permissions import IsAdminUser
 from apps.common.responses import SuccessEnvelopeMixin
-from apps.accounts.models import User
 from apps.cms.models import ContactMessage, Subscription
 
 from .models import Order, OrderItem
@@ -139,7 +138,7 @@ class AdminDashboardView(SuccessEnvelopeMixin, APIView):
                 "variants": ProductVariant.objects.count(),
                 "active_variants": ProductVariant.objects.filter(is_active=True).count(),
             },
-            "customers": {"total": User.objects.filter(is_staff=False).count()},
+            "customers": {"total": _unique_order_customers()},
             "contact_messages": {
                 "total": ContactMessage.objects.count(),
                 "new": ContactMessage.objects.filter(status=ContactMessage.StatusChoices.NEW).count(),
@@ -158,3 +157,41 @@ def _percent_change(current, previous):
     if not previous:
         return 100 if current else 0
     return round((current - previous) * 100 / previous, 2)
+
+
+def _unique_order_customers():
+    """Count customer identities from orders, matching on any two of three fields."""
+    orders = list(Order.objects.values_list("customer_name", "email", "phone"))
+    if not orders:
+        return 0
+
+    parents = list(range(len(orders)))
+
+    def find(index):
+        while parents[index] != index:
+            parents[index] = parents[parents[index]]
+            index = parents[index]
+        return index
+
+    def union(first, second):
+        first_root = find(first)
+        second_root = find(second)
+        if first_root != second_root:
+            parents[second_root] = first_root
+
+    seen_pairs = {}
+    for index, (name, email, phone) in enumerate(orders):
+        values = (
+            ("name", " ".join((name or "").casefold().split())),
+            ("email", (email or "").strip().casefold()),
+            ("phone", "".join(char for char in (phone or "") if char.isdigit())),
+        )
+        # A field must be present to participate in an identity match.
+        valid = [(field, value) for field, value in values if value]
+        for first_index in range(len(valid)):
+            for second_index in range(first_index + 1, len(valid)):
+                pair = (valid[first_index], valid[second_index])
+                previous = seen_pairs.setdefault(pair, index)
+                union(index, previous)
+
+    return len({find(index) for index in range(len(orders))})

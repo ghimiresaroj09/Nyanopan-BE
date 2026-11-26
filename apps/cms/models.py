@@ -5,6 +5,7 @@ import uuid
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.text import slugify
 
 from apps.common.models import TimeStampedModel
 from apps.common.storages import image_storage
@@ -33,6 +34,10 @@ def story_subsection_image_path(instance, filename):
 
 def sustainability_section_image_path(instance, filename):
     return _cms_image_path("sustainability", filename)
+
+
+def blog_image_path(instance, filename):
+    return _cms_image_path("blogs", filename)
 
 
 class SiteConfiguration(TimeStampedModel):
@@ -791,3 +796,179 @@ class ContactMessage(TimeStampedModel):
     
     def __str__(self):
         return f"{self.name} - {self.subject}"
+
+
+class ContactMessageReply(models.Model):
+    """A successfully sent admin reply to a contact form submission."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    contact_message = models.ForeignKey(
+        ContactMessage,
+        on_delete=models.CASCADE,
+        related_name="replies",
+    )
+    reply = models.TextField()
+    subject = models.CharField(max_length=255)
+    sent_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    sent_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="contact_message_replies",
+    )
+
+    class Meta:
+        ordering = ["sent_at", "id"]
+        db_table = "cms_contact_message_reply"
+
+    def __str__(self):
+        return f"Reply to {self.contact_message_id} at {self.sent_at}"
+
+
+class FAQCategory(TimeStampedModel):
+    """A named group of frequently asked questions."""
+
+    name = models.CharField(max_length=150, unique=True)
+
+    class Meta:
+        db_table = "cms_faq_category"
+        ordering = ["name"]
+        verbose_name = "FAQ Category"
+        verbose_name_plural = "FAQ Categories"
+
+    def __str__(self):
+        return self.name
+
+
+class FAQ(TimeStampedModel):
+    """A question and answer within an FAQ category."""
+
+    category = models.ForeignKey(
+        FAQCategory,
+        on_delete=models.CASCADE,
+        related_name="faqs",
+    )
+    question = models.CharField(max_length=500)
+    answer = models.TextField()
+
+    class Meta:
+        db_table = "cms_faq"
+        ordering = ["category__name", "question"]
+
+    def __str__(self):
+        return self.question
+
+
+class BlogCategory(TimeStampedModel):
+    """A category for published blog content."""
+
+    name = models.CharField(max_length=150, unique=True)
+
+    class Meta:
+        db_table = "cms_blog_category"
+        ordering = ["name"]
+        verbose_name = "Blog Category"
+        verbose_name_plural = "Blog Categories"
+
+    def __str__(self):
+        return self.name
+
+
+class Blog(TimeStampedModel):
+    """Blog article with editorial and publication metadata."""
+
+    class RobotsChoices(models.TextChoices):
+        INDEX_FOLLOW = "index, follow", "index, follow"
+        NOINDEX_FOLLOW = "noindex, follow", "noindex, follow"
+        INDEX_NOFOLLOW = "index, nofollow", "index, nofollow"
+        NOINDEX_NOFOLLOW = "noindex, nofollow", "noindex, nofollow"
+        MAX_IMAGE_PREVIEW_LARGE = "max-image-preview:large", "max-image-preview:large"
+        INDEX_FOLLOW_MAX_IMAGE = (
+            "index, follow, max-image-preview:large",
+            "index, follow, max-image-preview:large",
+        )
+        NOINDEX_FOLLOW_MAX_IMAGE = (
+            "noindex, follow, max-image-preview:large",
+            "noindex, follow, max-image-preview:large",
+        )
+        INDEX_NOFOLLOW_MAX_IMAGE = (
+            "index, nofollow, max-image-preview:large",
+            "index, nofollow, max-image-preview:large",
+        )
+        NOINDEX_NOFOLLOW_MAX_IMAGE = (
+            "noindex, nofollow, max-image-preview:large",
+            "noindex, nofollow, max-image-preview:large",
+        )
+
+    class TwitterCardChoices(models.TextChoices):
+        SUMMARY = "summary", "Summary"
+        SUMMARY_LARGE_IMAGE = "summary_large_image", "Summary with large image"
+
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True, blank=True, db_index=False)
+    excerpt = models.CharField(max_length=500, blank=True, default="")
+    category = models.ForeignKey(
+        BlogCategory,
+        on_delete=models.PROTECT,
+        related_name="blogs",
+    )
+    image = models.ImageField(
+        upload_to=blog_image_path,
+        storage=image_storage,
+        validators=[validate_image_upload],
+    )
+    content = models.TextField(help_text="Rich text content stored as HTML.")
+    tags = models.JSONField(default=list, blank=True)
+    meta_title = models.CharField(max_length=255, blank=True, default="")
+    meta_description = models.CharField(max_length=320, blank=True, default="")
+    meta_keywords = models.JSONField(default=list, blank=True)
+    canonical_url = models.URLField(max_length=500, blank=True, default="")
+    meta_robots = models.CharField(
+        max_length=64,
+        choices=RobotsChoices.choices,
+        default=RobotsChoices.INDEX_FOLLOW_MAX_IMAGE,
+    )
+    og_title = models.CharField(max_length=255, blank=True, default="")
+    og_description = models.CharField(max_length=320, blank=True, default="")
+    og_url = models.URLField(max_length=500, blank=True, default="")
+    og_image = models.ImageField(
+        upload_to=blog_image_path,
+        storage=image_storage,
+        validators=[validate_image_upload],
+        blank=True,
+    )
+    twitter_card = models.CharField(
+        max_length=32,
+        choices=TwitterCardChoices.choices,
+        default=TwitterCardChoices.SUMMARY_LARGE_IMAGE,
+    )
+    twitter_title = models.CharField(max_length=255, blank=True, default="")
+    twitter_description = models.CharField(max_length=320, blank=True, default="")
+    twitter_image = models.ImageField(
+        upload_to=blog_image_path,
+        storage=image_storage,
+        validators=[validate_image_upload],
+        blank=True,
+    )
+    is_featured = models.BooleanField(default=False, db_index=True)
+    is_published = models.BooleanField(default=False, db_index=True)
+    views = models.PositiveIntegerField(default=0, db_index=True)
+
+    class Meta:
+        db_table = "cms_blog"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        base_slug = slugify(self.slug or self.title) or f"blog-{self.pk.hex[:8]}"
+        candidate = base_slug[:255]
+        suffix = 2
+        while Blog.objects.filter(slug=candidate).exclude(pk=self.pk).exists():
+            ending = f"-{suffix}"
+            candidate = f"{base_slug[:255 - len(ending)]}{ending}"
+            suffix += 1
+        self.slug = candidate
+        super().save(*args, **kwargs)

@@ -353,3 +353,37 @@ class ContactMessageAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         # Don't allow manual creation (only via API)
         return False
+
+
+@admin.register(models.FAQCategory)
+class FAQCategoryAdmin(admin.ModelAdmin):
+    list_display = ["name", "created_at", "updated_at"]
+    search_fields = ["name"]
+    ordering = ["name"]
+    readonly_fields = ["created_at", "updated_at"]
+
+
+@admin.register(models.FAQ)
+class FAQAdmin(admin.ModelAdmin):
+    list_display = ["question", "category", "created_at"]
+    list_filter = ["category"]
+    search_fields = ["question", "answer", "category__name"]
+    ordering = ["category__name", "question"]
+    readonly_fields = ["created_at", "updated_at"]
+
+
+@admin.register(models.BlogCategory)
+class BlogCategoryAdmin(admin.ModelAdmin):
+    list_display = ["name", "created_at", "updated_at"]
+    search_fields = ["name"]
+    ordering = ["name"]
+    readonly_fields = ["created_at", "updated_at"]
+
+
+@admin.register(models.Blog)
+class BlogAdmin(admin.ModelAdmin):
+    list_display = ["title", "category", "views", "is_featured", "is_published", "created_at"]
+    list_filter = ["category", "is_featured", "is_published"]
+    search_fields = ["title", "content", "tags"]
+    ordering = ["-created_at"]
+    readonly_fields = ["views", "created_at", "updated_at"]

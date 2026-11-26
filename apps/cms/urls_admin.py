@@ -7,6 +7,11 @@ from .views import (
     CollectionAdminViewSet,
     ContactMessageAdminDetailView,
     ContactMessageAdminListView,
+    ContactMessageAdminReplyView,
+    BlogAdminViewSet,
+    BlogCategoryAdminViewSet,
+    FAQAdminViewSet,
+    FAQCategoryAdminViewSet,
     HomepageAdminView,
     HomepageCollectionsAdminView,
     OurMakersAdminView,
@@ -24,6 +29,10 @@ router = DefaultRouter()
 router.register(r'policies', PolicyAdminViewSet, basename='policy-admin')
 router.register(r'team-members', TeamMemberAdminViewSet, basename='team-member-admin')
 router.register(r'collections', CollectionAdminViewSet, basename='collection-admin')
+router.register(r'faq-categories', FAQCategoryAdminViewSet, basename='faq-category-admin')
+router.register(r'faqs', FAQAdminViewSet, basename='faq-admin')
+router.register(r'blog-categories', BlogCategoryAdminViewSet, basename='blog-category-admin')
+router.register(r'blogs', BlogAdminViewSet, basename='blog-admin')
 
 urlpatterns = [
     path("configuration/", SiteConfigurationAdminView.as_view(), name="configuration-admin"),
@@ -35,4 +44,5 @@ urlpatterns = [
     path("subscriptions/", SubscriptionAdminListView.as_view(), name="subscriptions-admin"),
     path("contact-messages/", ContactMessageAdminListView.as_view(), name="contact-messages-admin"),
     path("contact-messages/<uuid:pk>/", ContactMessageAdminDetailView.as_view(), name="contact-message-detail-admin"),
+    path("contact-messages/<uuid:pk>/reply/", ContactMessageAdminReplyView.as_view(), name="contact-message-reply-admin"),
 ] + router.urls
