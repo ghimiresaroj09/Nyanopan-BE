@@ -1010,7 +1010,8 @@ class BlogSerializer(serializers.ModelSerializer):
         model = Blog
         fields = [
             "id", "title", "slug", "excerpt", "category", "category_name",
-            "image", "content", "tags", "is_featured", "is_published", "views",
+            "image", "image_title", "image_alt", "image_caption", "content", "tags",
+            "is_featured", "is_published", "views",
             "meta_title", "meta_description", "meta_keywords", "canonical_url",
             "meta_robots", "og_title", "og_description", "og_url", "og_image", "twitter_card",
             "twitter_title", "twitter_description", "twitter_image", "created_at", "updated_at",
@@ -1035,7 +1036,8 @@ class BlogPublicSerializer(serializers.ModelSerializer):
         model = Blog
         fields = [
             "id", "title", "slug", "excerpt", "category", "category_name", "image",
-            "content", "tags", "is_featured", "views", "created_at", "meta_title",
+            "image_title", "image_alt", "image_caption", "content", "tags",
+            "is_featured", "views", "created_at", "meta_title",
             "meta_description", "meta_keywords", "canonical_url", "meta_robots",
             "og_title", "og_description", "og_url", "og_image", "twitter_card", "twitter_title",
             "twitter_description", "twitter_image",

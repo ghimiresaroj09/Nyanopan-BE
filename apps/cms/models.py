@@ -918,6 +918,9 @@ class Blog(TimeStampedModel):
         storage=image_storage,
         validators=[validate_image_upload],
     )
+    image_title = models.CharField(max_length=255, blank=True, default="")
+    image_alt = models.CharField(max_length=255, blank=True, default="")
+    image_caption = models.CharField(max_length=500, blank=True, default="")
     content = models.TextField(help_text="Rich text content stored as HTML.")
     tags = models.JSONField(default=list, blank=True)
     meta_title = models.CharField(max_length=255, blank=True, default="")

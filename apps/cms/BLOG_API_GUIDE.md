@@ -27,7 +27,8 @@ Blog list filters:
 | `ordering=views` or `ordering=-views` | Order by view count |
 | `ordering=created_at` or `ordering=-created_at` | Order by date |
 
-Public responses contain the article fields and SEO metadata: `slug`, `excerpt`,
+Public responses contain the article fields, image metadata (`image_title`,
+`image_alt`, `image_caption`), and SEO metadata: `slug`, `excerpt`,
 `meta_title`, `meta_description`, `meta_keywords`, `canonical_url`, `meta_robots`,
 `og_title`, `og_description`, `og_url`, `og_image`, `twitter_card`, `twitter_title`,
 `twitter_description`, and `twitter_image`. When optional title, description, or
@@ -57,6 +58,9 @@ Create a blog with `multipart/form-data` fields:
 title: Caring for wool felt
 category: <category UUID>
 image: <image file>
+image_title: Wool felt slippers
+image_alt: Handcrafted wool felt slippers in natural cream
+image_caption: Our slippers are made from locally sourced wool.
 content: <HTML from the rich-text editor>
 tags: ["care", "wool"]
 is_featured: false
