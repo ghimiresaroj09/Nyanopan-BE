@@ -243,7 +243,7 @@ hostname keeps working.
 
 | Task | How |
 | --- | --- |
-| Redeploy | `git push` — Render builds and deploys automatically, with zero downtime |
+| Redeploy | `git push` to the service's linked branch — Render builds and deploys automatically, with zero downtime |
 | Logs | Render Dashboard → service → **Logs** (app logs go to stdout) |
 | Roll back | Dashboard → **Deploys** → *Redeploy* an earlier commit |
 | Rotate `SECRET_KEY` | Change it in the dashboard → redeploy (invalidates all JWTs) |

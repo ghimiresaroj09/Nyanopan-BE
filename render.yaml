@@ -24,6 +24,8 @@ services:
     # plan: starter
     buildCommand: bash build.sh # `bash` avoids depending on the exec bit being committed
     startCommand: gunicorn config.wsgi:application -c gunicorn.conf.py
+    # Deploy every commit pushed to the branch linked to this Render service.
+    autoDeployTrigger: commit
 
     # Process-only probe: no database access. Render probes every few seconds,
     # and a database-backed probe would keep the Neon compute permanently
