@@ -11,21 +11,13 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RemoveField(
-            model_name='cartitem',
-            name='cart',
-        ),
-        migrations.RemoveField(
             model_name='order',
             name='cart',
         ),
-        migrations.RemoveField(
-            model_name='cartitem',
-            name='variant',
+        migrations.DeleteModel(
+            name='CartItem',
         ),
         migrations.DeleteModel(
             name='Cart',
-        ),
-        migrations.DeleteModel(
-            name='CartItem',
         ),
     ]
