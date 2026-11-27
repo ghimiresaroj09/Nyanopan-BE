@@ -124,7 +124,7 @@ ASGI_APPLICATION = "config.asgi.application"
 
 
 # ---------------------------------------------------------------------------
-# Database (DATABASE_URL selects PostgreSQL or MySQL; SQLite fallback locally)
+# Database (DATABASE_URL selects PostgreSQL or MySQL; production requires MySQL)
 # ---------------------------------------------------------------------------
 _DATABASE_URL = (env("DATABASE_URL") or "").strip()
 if _DATABASE_URL:

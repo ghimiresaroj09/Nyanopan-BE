@@ -1,4 +1,4 @@
-"""Production settings: hardened defaults, PostgreSQL or MySQL expected.
+"""Production settings: hardened defaults, MySQL required.
 
 Targets Render (https://render.com): reads configuration from environment
 variables, trusts the platform's TLS-terminating proxy, serves static files
@@ -46,8 +46,11 @@ if not _is_build_phase:
             "If deploying on Render, ensure SECRET_KEY is set in the environment."
         )
 
-if DATABASES["default"]["ENGINE"] == "django.db.backends.sqlite3":
-    raise ImproperlyConfigured("A PostgreSQL or MySQL DATABASE_URL is required in production.")
+if DATABASES["default"]["ENGINE"] != "django.db.backends.mysql":
+    raise ImproperlyConfigured(
+        "A MySQL DATABASE_URL is required in production "
+        "(for example, mysql://USER:PASSWORD@HOST:3306/DB_NAME)."
+    )
 
 # Reuse connections between requests, but verify them first: Neon suspends idle
 # computes and closes pooled connections, so a stale handle would otherwise
@@ -89,7 +92,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "same-origin"
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
-SECURE_HSTS_SECONDS = int(env("SECURE_HSTS_SECONDS", "31536000"))
+SECURE_HSTS_SECONDS = int(env("SECURE_HSTS_SECONDS", "0"))
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
